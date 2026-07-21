@@ -77,76 +77,64 @@ $share_url = 'https://url2ai.exbridge.jp/';
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Kurage URL2AI Publisher — KurageさんがURLを解析して5メディアに配信</title>
-<meta name="description" content="URLを渡すとKurageさんが記事を読み、考察と告知文を書き、株式会社エクスブリッジが運営する5メディア(Bluesky/はてなブックマーク/はてなブログ/AIxSNS/Kurageブログ)へ配信します。">
+<meta name="description" content="URLを渡すとKurageさんが記事を読み、考察と告知文を書き、株式会社エクスブリッジが運営する5メディア(Bluesky/はてなブックマーク/はてなブログ/AIxSNS/Kurageブログ)へ自動配信します。無料・Xログインで利用可能。">
+<meta name="keywords" content="Kurage,URL2AI,AI VTuber,自動配信,ブログ自動生成,SNS自動投稿,Bluesky,はてな,AIxSNS,exbridge">
 <meta name="robots" content="index,follow">
+<meta name="author" content="EXBRIDGE, Inc.">
 <link rel="canonical" href="https://url2ai.exbridge.jp/">
-<style>
-:root {
-  --ink: #241a4d; --muted: #6d679a; --sea: #8f7ae8; --line: #ded4f6;
-  --accent: #6c4fd4; --accent2: #5136b0; --soft: #f2edfd;
-  --paper: rgba(255,255,255,.92); --up: #1baf7a; --down: #d6453d;
+<link rel="icon" href="assets/kurage_avatar_square.png" type="image/png">
+<link rel="apple-touch-icon" href="assets/kurage_avatar_square.png">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Kurage URL2AI Publisher">
+<meta property="og:title" content="Kurage URL2AI Publisher — URLを渡すだけで5メディアへ自動配信">
+<meta property="og:description" content="KurageさんがURLを解析して考察・告知文・ブログ記事を書き、Bluesky/はてな/AIxSNS/Kurageブログへ自動配信します。">
+<meta property="og:url" content="https://url2ai.exbridge.jp/">
+<meta property="og:image" content="https://url2ai.exbridge.jp/assets/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Kurage URL2AI Publisher">
+<meta name="twitter:description" content="URLを渡すだけでKurageさんが5メディアへ自動配信します。">
+<meta name="twitter:image" content="https://url2ai.exbridge.jp/assets/ogp.png">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Kurage URL2AI Publisher",
+  "url": "https://url2ai.exbridge.jp/",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "description": "URLを解析し、告知文とブログ記事を自動生成して5つのメディアへ配信するAIパブリッシングツール。",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
+  "provider": { "@type": "Organization", "name": "EXBRIDGE, Inc.", "url": "https://exbridge.jp/" }
 }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body {
-  color: var(--ink);
-  font-family: -apple-system, "Segoe UI", Roboto, "Hiragino Sans", "Yu Gothic", Meiryo, sans-serif;
-  background: linear-gradient(160deg, #fff 0%, #f1edff 50%, #f8f5ff 100%);
-  min-height: 100vh; line-height: 1.75;
-}
-a { color: var(--accent); }
-header { max-width: 900px; margin: 0 auto; padding: 40px 24px 10px; display: flex; gap: 22px; align-items: center; justify-content: space-between; }
-.hbrand { display: flex; gap: 22px; align-items: center; }
-header img { width: 92px; height: 92px; border-radius: 50%; box-shadow: 0 10px 30px rgba(108,79,212,.22); }
-header h1 { font-size: 24px; font-weight: 900; letter-spacing: -.01em; }
-header p { font-size: 13.5px; color: var(--muted); margin-top: 6px; max-width: 560px; }
-.whoami { font-size: 12.5px; color: var(--muted); text-align: right; }
-.whoami a { font-weight: 700; }
-main { max-width: 900px; margin: 0 auto; padding: 10px 24px 60px; }
-.intro { background: var(--paper); border: 1.5px solid var(--line); border-radius: 20px; padding: 22px 26px; margin: 18px 0 26px; font-size: 14.5px; color: #45406a; box-shadow: 0 12px 34px rgba(30,22,61,.06); }
-.intro b { color: var(--accent2); }
-.media { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
-.media span { background: var(--soft); color: var(--accent2); border-radius: 999px; padding: 5px 12px; font-size: 12px; font-weight: 700; }
-.card { background: var(--paper); border: 1.5px solid var(--line); border-radius: 20px; padding: 24px; box-shadow: 0 12px 34px rgba(30,22,61,.06); }
-form input[type=url] { width: 100%; padding: 12px 14px; border: 1.5px solid var(--line); border-radius: 12px; font-size: 14px; margin-bottom: 14px; }
-label { font-size: 13px; font-weight: 800; color: var(--accent2); display: block; margin-bottom: 8px; }
-.btn { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #fff; border: none; border-radius: 999px; padding: 12px 26px; font-weight: 900; font-size: 14px; cursor: pointer; text-decoration: none; box-shadow: 0 8px 20px rgba(108,79,212,.26); }
-.btn-x { background: #000; }
-.btn-ghost { background: #fff; color: var(--accent2); border: 1.5px solid var(--line); box-shadow: none; }
-.btn-sm { padding: 7px 14px; font-size: 12.5px; }
-.error { background: #fde2e1; color: #a4201b; border-radius: 14px; padding: 14px 18px; margin: 18px 0; font-size: 13.5px; font-weight: 700; }
-.result h2 { font-size: 15px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin: 26px 0 10px; }
-.item { margin-bottom: 14px; }
-.item .text { white-space: pre-wrap; font-size: 14px; background: var(--soft); border-radius: 12px; padding: 14px 16px; margin-bottom: 8px; }
-.item .actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.item .actions .status { font-size: 12.5px; font-weight: 700; }
-.item .actions .status.ok { color: var(--up); } .item .actions .status.ng { color: var(--down); }
-.blog h3 { font-size: 16px; margin-bottom: 10px; }
-.blog p { margin: 10px 0; font-size: 14px; color: #3a3560; }
-textarea.sharebox { width: 100%; min-height: 90px; border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 14px; font-family: inherit; margin-bottom: 14px; }
-#u2pSteps { list-style: none; }
-#u2pSteps li { padding: 8px 0; font-size: 14px; border-bottom: 1px solid var(--line); }
-#u2pSteps li:last-child { border-bottom: none; }
-footer { text-align: center; color: var(--muted); font-size: 12.5px; padding: 40px 20px 46px; border-top: 1px solid var(--line); margin-top: 30px; }
-footer a { font-weight: 700; }
-</style>
+</script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
 
-<header>
+<header class="site"><div class="wrap">
   <div class="hbrand">
-    <img src="assets/kurage_avatar.webp" alt="Kurage — jellyfish AI VTuber">
+    <div class="avatar-ring"><img src="assets/kurage_avatar_square.webp" alt="Kurage — jellyfish AI VTuber" width="96" height="96"></div>
     <div>
       <h1>Kurage URL2AI Publisher</h1>
-      <p>Kurageさんが記事を読み、考察と告知文を書き、5つのメディアへ配信します。</p>
+      <p class="tagline">Kurageさんが記事を読み、考察と告知文を書き、5つのメディアへ配信します。</p>
     </div>
   </div>
   <?php if ($logged_in): ?>
-    <div class="whoami">@<?php echo u2p_h($auth['session_user']); ?> でログイン中<br>
+    <div class="whoami"><strong>@<?php echo u2p_h($auth['session_user']); ?></strong> でログイン中<br>
       <a href="history.php">履歴</a> · <a href="?logout=1">ログアウト</a></div>
   <?php endif; ?>
-</header>
+</div></header>
 
-<main>
+<main><div class="wrap">
 
 <?php if ($view === 'login'): ?>
   <div class="intro">
@@ -159,7 +147,7 @@ footer a { font-weight: 700; }
     </div>
   </div>
   <div class="card" style="text-align:center">
-    <p style="font-size:13.5px;color:var(--muted);margin-bottom:16px">
+    <p style="font-size:13.5px;color:var(--abyss-soft);margin-bottom:16px">
       現在無料でご利用いただけます。ご利用の条件として、配信後にXへ一言シェアをお願いしています。<br>
       利用を始めるにはXでログインしてください。
     </p>
@@ -183,14 +171,14 @@ footer a { font-weight: 700; }
   </form>
   <div id="u2pError" class="error" style="display:none"></div>
   <div id="u2pProgress" class="card" style="display:none">
-    <h2 style="font-size:16px;margin-bottom:6px">Kurageさんが作業中です🪼</h2>
+    <h2 style="font-size:16px;margin-bottom:6px;text-transform:none;letter-spacing:0;color:var(--abyss)">Kurageさんが作業中です</h2>
     <ul id="u2pSteps"></ul>
   </div>
 
 <?php elseif ($view === 'share' && $pending): ?>
   <div class="card">
-    <h2 style="font-size:16px;margin-bottom:10px">配信が完了しました🪼</h2>
-    <p style="font-size:13.5px;color:var(--muted);margin-bottom:16px">
+    <h2 style="font-size:16px;margin-bottom:10px;text-transform:none;letter-spacing:0;color:var(--abyss)">配信が完了しました</h2>
+    <p style="font-size:13.5px;color:var(--abyss-soft);margin-bottom:16px">
       無料でのご利用にあたり、下の内容でXへ一言シェアをお願いします。投稿後、下のボタンから結果画面へ進んでください。
     </p>
     <textarea class="sharebox" id="shareText" readonly><?php echo u2p_h($share_text . ' ' . $share_url); ?></textarea>
@@ -207,7 +195,7 @@ footer a { font-weight: 700; }
   <?php $announcement = $pending['announcement']; $blog = $pending['blog']; $posted = $pending['posted']; ?>
   <div class="result">
     <?php if ($is_history_view): ?>
-      <p style="font-size:12.5px;color:var(--muted);margin-bottom:10px">
+      <p style="font-size:12.5px;color:var(--abyss-soft);margin-bottom:10px">
         履歴: <?php echo u2p_h(isset($pending['created_at']) ? $pending['created_at'] : ''); ?> ·
         元URL: <a href="<?php echo u2p_h($pending['source']['url']); ?>" target="_blank" rel="noopener"><?php echo u2p_h($pending['source']['url']); ?></a> ·
         <a href="history.php">履歴一覧へ戻る</a>
@@ -248,7 +236,7 @@ footer a { font-weight: 700; }
             <a class="btn btn-x btn-sm" href="<?php echo u2p_h(u2p_tweet_intent($p['label'] . ': ', $p['url'])); ?>" target="_blank" rel="noopener">𝕏 投稿</a>
             <button type="button" class="btn btn-ghost btn-sm" onclick="u2pCopy('url-<?php echo $i; ?>')">コピー</button>
           <?php elseif (empty($p['ok'])): ?>
-            <span style="font-size:12.5px;color:var(--muted)"><?php echo u2p_h(isset($p['error']) ? $p['error'] : ''); ?></span>
+            <span style="font-size:12.5px;color:var(--abyss-soft)"><?php echo u2p_h(isset($p['error']) ? $p['error'] : ''); ?></span>
           <?php else: ?>
             &mdash;
           <?php endif; ?>
@@ -263,14 +251,14 @@ footer a { font-weight: 700; }
   </div>
 <?php endif; ?>
 
-</main>
+</div></main>
 
-<footer>
+<footer class="site"><div class="wrap">
   Kurage URL2AI Publisher — <a href="https://exbridge.jp/">株式会社エクスブリッジ</a>のプロダクト ·
   頭脳は <a href="https://github.com/katsushi2441/url2brain">url2brain</a>(OSS)が担当 ·
   <a href="https://kfreqai.exbridge.jp/">kfreqai</a> · <a href="https://kfxai.exbridge.jp/">kfxai</a> ·
   <a href="https://kcbrain.exbridge.jp/">kcbrain</a> · <a href="https://kfxbrain.exbridge.jp/">kfxbrain</a>
-</footer>
+</div></footer>
 
 <script>
 function u2pCopy(id) {
