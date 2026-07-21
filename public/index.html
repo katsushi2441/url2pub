@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kurage URL2AI Publisher — Kurage reads a URL and publishes it across 5 media</title>
+<meta name="description" content="Paste one URL. Kurage, an AI VTuber, reads it, writes an announcement and a blog article, and auto-publishes them across 5 media — Bluesky, Hatena Bookmark, AIxSNS, Kurage's blog, Hatena Blog. Free with X login. The brain behind it, url2brain, is open source and also sold as a $1/call x402 API for AI agents.">
+<meta name="robots" content="index,follow">
+<meta name="author" content="EXBRIDGE, Inc.">
+<link rel="canonical" href="https://url2ai.exbridge.jp/">
+<link rel="alternate" hreflang="ja" href="https://url2ai.exbridge.jp/url2pub.html">
+<link rel="icon" href="assets/kurage_avatar_square.png" type="image/png">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Kurage URL2AI Publisher">
+<meta property="og:title" content="Kurage URL2AI Publisher — one URL in, five media out">
+<meta property="og:description" content="Kurage reads a URL, writes an announcement and a blog article, and auto-publishes across Bluesky, Hatena Bookmark, AIxSNS, her own blog, and Hatena Blog.">
+<meta property="og:url" content="https://url2ai.exbridge.jp/">
+<meta property="og:image" content="https://url2ai.exbridge.jp/assets/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Kurage URL2AI Publisher">
+<meta name="twitter:description" content="One URL in, five media out — written and published by Kurage.">
+<meta name="twitter:image" content="https://url2ai.exbridge.jp/assets/ogp.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Kurage URL2AI Publisher",
+  "url": "https://url2ai.exbridge.jp/",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web",
+  "description": "Paste a URL and get an AI-written announcement and blog article, auto-published across 5 media.",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "provider": { "@type": "Organization", "name": "EXBRIDGE, Inc.", "url": "https://exbridge.jp/" }
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --abyss: #12202f; --abyss-soft: #55697a; --foam: #f5fbfb; --panel: #e7f3f2;
+  --panel-line: #cde5e2; --teal: #12a99f; --teal-deep: #0a726b; --violet: #6f5fd8;
+  --shadow: 0 14px 40px rgba(10, 40, 45, .10);
+}
+@media (prefers-color-scheme: dark) {
+  :root { --abyss: #eaf3f3; --abyss-soft: #9fb3ba; --foam: #0c1720; --panel: #12242a;
+    --panel-line: #1f3a3f; --teal: #2bd4c6; --teal-deep: #1c9e93; --violet: #9186ea;
+    --shadow: 0 14px 40px rgba(0,0,0,.38); }
+}
+:root[data-theme="dark"] { --abyss: #eaf3f3; --abyss-soft: #9fb3ba; --foam: #0c1720; --panel: #12242a;
+  --panel-line: #1f3a3f; --teal: #2bd4c6; --teal-deep: #1c9e93; --violet: #9186ea; --shadow: 0 14px 40px rgba(0,0,0,.38); }
+:root[data-theme="light"] { --abyss: #12202f; --abyss-soft: #55697a; --foam: #f5fbfb; --panel: #e7f3f2;
+  --panel-line: #cde5e2; --teal: #12a99f; --teal-deep: #0a726b; --violet: #6f5fd8; --shadow: 0 14px 40px rgba(10,40,45,.10); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { color: var(--abyss); font-family: "Zen Kaku Gothic New", -apple-system, "Segoe UI", sans-serif;
+  background: var(--foam); min-height: 100vh; line-height: 1.75; }
+a { color: var(--teal-deep); text-decoration: none; }
+a:hover { color: var(--teal); }
+h1, h2, h3, .display { font-family: "Zen Maru Gothic", "Zen Kaku Gothic New", sans-serif; text-wrap: balance; }
+img { max-width: 100%; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+header.site { position: sticky; top: 0; z-index: 40; background: color-mix(in srgb, var(--foam) 88%, transparent);
+  backdrop-filter: blur(16px); border-bottom: 1px solid var(--panel-line); }
+header.site .wrap { display: flex; align-items: center; gap: 16px; padding: 12px 24px; }
+.hbrand { display: flex; gap: 14px; align-items: center; }
+.avatar-ring { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; border: 2px solid var(--teal); flex-shrink: 0; }
+.avatar-ring img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 15%; }
+.hbrand strong { font-size: 15px; font-weight: 900; display: block; }
+.hbrand span { font-size: 11.5px; color: var(--abyss-soft); }
+.hnav { display: flex; gap: 8px; align-items: center; margin-left: auto; }
+.btn { border-radius: 999px; padding: 10px 18px; font-weight: 900; font-size: 13px; display: inline-flex;
+  align-items: center; gap: 7px; border: 1.5px solid transparent; cursor: pointer; }
+.btn-primary { background: linear-gradient(135deg, var(--teal), var(--teal-deep)); color: #fff;
+  box-shadow: 0 10px 24px rgba(18,169,159,.28); }
+.btn-ghost { background: transparent; border-color: var(--panel-line); color: var(--abyss-soft); }
+.hero { padding: 56px 0 30px; display: grid; grid-template-columns: 1.2fr .8fr; gap: 40px; align-items: center; }
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; background: var(--panel); border: 1.5px solid var(--panel-line);
+  border-radius: 999px; padding: 7px 14px; font-size: 12px; font-weight: 900; color: var(--teal-deep); margin-bottom: 18px; }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; transform: scale(1);} 50% { opacity: .5; transform: scale(.8);} }
+h1 { font-size: clamp(28px, 4.2vw, 44px); font-weight: 900; line-height: 1.2; margin-bottom: 16px; }
+h1 em { font-style: normal; color: var(--teal-deep); }
+.lead { font-size: 15.5px; color: var(--abyss-soft); max-width: 600px; margin-bottom: 24px; }
+.cta-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.hero-avatar { background: var(--panel); border: 1.5px solid var(--panel-line); border-radius: 28px;
+  padding: 26px 22px 20px; text-align: center; box-shadow: var(--shadow); }
+.hero-avatar img { height: 260px; width: auto; border-radius: 20px; }
+.hero-avatar h2 { font-size: 16px; margin: 12px 0 4px; }
+.hero-avatar p { font-size: 12.5px; color: var(--abyss-soft); }
+section { padding: 34px 0; }
+section > h2 { font-size: clamp(21px, 3vw, 28px); font-weight: 900; margin-bottom: 6px; }
+section > .sub { color: var(--abyss-soft); font-size: 14px; font-weight: 700; margin-bottom: 22px; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 16px; }
+.card { background: color-mix(in srgb, var(--foam) 60%, var(--panel) 40%); border: 1.5px solid var(--panel-line);
+  border-radius: 20px; padding: 22px; box-shadow: var(--shadow); }
+.card .tag { display: inline-block; background: var(--panel); color: var(--teal-deep); border-radius: 999px;
+  padding: 3px 12px; font-size: 11px; font-weight: 900; margin-bottom: 10px; }
+.card h3 { font-size: 16px; font-weight: 900; margin-bottom: 8px; }
+.card p { font-size: 13.5px; color: var(--abyss-soft); }
+.flow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 13.5px; font-weight: 700; }
+.flow .step { background: var(--panel); border: 1.5px solid var(--panel-line); border-radius: 12px; padding: 10px 14px; }
+.flow .arrow { color: var(--teal); font-weight: 900; }
+.brain { background: color-mix(in srgb, var(--violet) 8%, var(--foam)); border: 1.5px solid var(--panel-line);
+  border-radius: 24px; padding: 28px; box-shadow: var(--shadow); }
+.brain h2 { color: var(--violet); }
+.brain table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px; }
+.brain th, .brain td { text-align: left; padding: 9px 10px; border-top: 1px solid var(--panel-line); vertical-align: top; }
+.brain th { color: var(--abyss-soft); font-weight: 700; font-size: 12px; }
+.brain code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; background: var(--panel);
+  padding: 1px 6px; border-radius: 6px; }
+.pill { display: inline-block; font-size: 11px; font-weight: 900; padding: 3px 10px; border-radius: 999px; }
+.pill.free { background: color-mix(in srgb, var(--teal) 16%, transparent); color: var(--teal-deep); }
+.pill.paid { background: color-mix(in srgb, var(--violet) 16%, transparent); color: var(--violet); }
+footer.site { text-align: center; color: var(--abyss-soft); font-size: 12.5px; padding: 40px 20px 46px;
+  border-top: 1px solid var(--panel-line); margin-top: 20px; }
+footer.site a { color: var(--teal-deep); font-weight: 700; }
+@media (max-width: 760px) {
+  .hero { grid-template-columns: 1fr; padding-top: 30px; }
+  .hero-avatar img { height: 200px; }
+}
+</style>
+</head>
+<body>
+
+<header class="site"><div class="wrap">
+  <div class="hbrand">
+    <div class="avatar-ring"><img src="assets/kurage_avatar_square.webp" alt="Kurage"></div>
+    <div><strong>Kurage URL2AI Publisher</strong><span>An EXBRIDGE, Inc. product</span></div>
+  </div>
+  <nav class="hnav">
+    <a class="btn btn-ghost" href="url2pub.html">日本語</a>
+    <a class="btn btn-primary" href="url2pub.php">Open the tool</a>
+  </nav>
+</div></header>
+
+<div class="wrap">
+  <div class="hero">
+    <div>
+      <span class="eyebrow"><span class="dot"></span>FREE · X LOGIN · 5-MEDIA AUTO-PUBLISH</span>
+      <h1>Paste one URL. <em>Kurage publishes it</em> across five media.</h1>
+      <p class="lead">
+        Kurage — EXBRIDGE's AI VTuber — reads the page behind your URL, writes a short
+        announcement and a full blog article grounded only in what she actually read, and
+        publishes both across Bluesky, Hatena Bookmark, AIxSNS, her own blog, and Hatena Blog.
+        No writing, no cross-posting by hand.
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="url2pub.php">Try it free</a>
+        <a class="btn btn-ghost" href="https://github.com/katsushi2441/url2pub" target="_blank" rel="noopener">GitHub (url2pub)</a>
+        <a class="btn btn-ghost" href="https://github.com/katsushi2441/url2brain" target="_blank" rel="noopener">GitHub (url2brain)</a>
+      </div>
+    </div>
+    <div class="hero-avatar">
+      <img src="assets/kurage_avatar_square.webp" alt="Kurage — jellyfish AI VTuber">
+      <h2>Kurage 🪼</h2>
+      <p>AI VTuber · reads, writes, and publishes on her own channels.</p>
+    </div>
+  </div>
+
+  <section>
+    <h2>How it works</h2>
+    <p class="sub">One form, one click, five real posts.</p>
+    <div class="flow">
+      <span class="step">1. Paste a URL</span><span class="arrow">→</span>
+      <span class="step">2. Kurage reads &amp; analyzes it</span><span class="arrow">→</span>
+      <span class="step">3. Writes an announcement + blog article</span><span class="arrow">→</span>
+      <span class="step">4. Publishes to 5 media</span>
+    </div>
+  </section>
+
+  <section>
+    <h2>Five media, one pass</h2>
+    <p class="sub">All accounts are EXBRIDGE / Kurage's own — nothing to connect on your side.</p>
+    <div class="grid">
+      <div class="card"><span class="tag">SHORT</span><h3>Bluesky</h3><p>@bittensorman.bsky.social — a short announcement in Kurage's own voice.</p></div>
+      <div class="card"><span class="tag">SHORT</span><h3>Hatena Bookmark</h3><p>A neutral bookmark comment pointing straight at your URL.</p></div>
+      <div class="card"><span class="tag">SHORT</span><h3>AIxSNS</h3><p>aixec.exbridge.jp — framed from the developer/business (bittensorman) side.</p></div>
+      <div class="card"><span class="tag">LONG</span><h3>Kurage's blog</h3><p>kurage.exbridge.jp/blog — a full article in the <code>url2pub</code> category.</p></div>
+      <div class="card"><span class="tag">LONG</span><h3>Hatena Blog</h3><p>xb-bittensor.hatenablog.com — the same article, developer voice.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Free, with one condition</h2>
+    <p class="sub">Log in with X to use the form. After Kurage publishes, share it once — that's it.</p>
+    <div class="card">
+      <p>Every generation and every history entry is tied to your X account. Admins can see aggregate
+      usage; nobody else can see your history.</p>
+    </div>
+  </section>
+
+  <section class="brain">
+    <h2>The brain: url2brain</h2>
+    <p class="sub">Open source. Self-hostable for free. Also sold as a metered API for AI agents.</p>
+    <p style="font-size:13.5px;color:var(--abyss-soft)">
+      All of the reading, writing and publishing above is done by <strong>url2brain</strong>, a
+      standalone open-source FastAPI service — the same code, MIT-licensed on GitHub, that you can
+      self-host with your own local LLM (Gemma 4 12B via Ollama) for zero marginal cost. This
+      website is one client of it; AI agents can be another.
+    </p>
+    <table>
+      <tr><th>Self-host</th><td>Run your own url2brain instance with a local model — free, no rate limits beyond your own hardware.</td></tr>
+      <tr><th>x402 API</th><td><span class="pill paid">$1.00 / call</span> — pay-per-request USDC (Base) endpoint for AI agents, no account needed. Runs on DeepSeek.
+        <br><code>POST .../url2brain/analyze/url</code> · <code>generate/announcement</code> · <code>generate/blog-article</code> · <code>generate/from-url</code>
+        <br><code>POST .../url2brain/post/bluesky</code> · <code>post/hatena-bookmark</code> · <code>post/aixsns</code> · <code>post/bludit</code> · <code>post/hatena-blog</code>
+        — these actually publish to Kurage/EXBRIDGE's own channels; payment itself is the posting authorization, no credentials required from the caller.</td></tr>
+    </table>
+    <div class="cta-row" style="margin-top:18px">
+      <a class="btn btn-ghost" href="https://x402.bankr.bot/0x444fadbd6e1fed0cfbf7613b6c9f91b9021eecbd/url2brain" target="_blank" rel="noopener">Bankr x402 listing</a>
+      <a class="btn btn-ghost" href="https://bittensorman.xyz/.well-known/x402.json" target="_blank" rel="noopener">Direct x402 discovery</a>
+      <a class="btn btn-ghost" href="https://github.com/katsushi2441/url2brain" target="_blank" rel="noopener">url2brain on GitHub</a>
+    </div>
+  </section>
+</div>
+
+<footer class="site"><div class="wrap">
+  Kurage URL2AI Publisher — an <a href="https://exbridge.jp/">EXBRIDGE, Inc.</a> product ·
+  <a href="url2pub.html">日本語版はこちら</a><br><br>
+  &copy; <span id="y"></span> EXBRIDGE, Inc. Developed by <a href="https://x.com/xb_bittensor" target="_blank" rel="noopener">bittensorman</a> ·
+  <a href="https://exbridge.jp/contact.php">Contact</a>
+</div></footer>
+<script>document.getElementById('y').textContent = new Date().getFullYear();</script>
+
+</body>
+</html>

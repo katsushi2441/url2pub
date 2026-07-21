@@ -1,5 +1,5 @@
 <?php
-// index.phpのJS(進捗チェックリスト)から段階的に呼ばれるAPI。解析→告知文→ブログ記事→
+// url2pub.phpのJS(進捗チェックリスト)から段階的に呼ばれるAPI。解析→告知文→ブログ記事→
 // 5媒体配信→履歴保存、をそれぞれ1コールずつ実行し、都度結果を返す。
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/auth_common.php';

@@ -8,11 +8,11 @@ date_default_timezone_set('Asia/Tokyo');
 // 委譲する。*.exbridge.jp共通クッキーのため、他のexbridge.jpサイトで既にログイン済みなら
 // url2ai.exbridge.jpでも自動的にログイン扱いになる。
 if (isset($_GET['login'])) {
-    header('Location: ' . url2ai_auth_login_url('/index.php'));
+    header('Location: ' . url2ai_auth_login_url('/url2pub.php'));
     exit;
 }
 if (isset($_GET['logout'])) {
-    header('Location: ' . url2ai_auth_logout_url('/index.php'));
+    header('Location: ' . url2ai_auth_logout_url('/url2pub.php'));
     exit;
 }
 $auth = url2ai_auth_bootstrap();
@@ -30,14 +30,14 @@ $MEDIA = array(
 // Xでシェア完了(自己申告) → 結果画面へ
 if ($logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_share'])) {
     $_SESSION['shared_confirmed'] = true;
-    header('Location: index.php?step=result');
+    header('Location: url2pub.php?step=result');
     exit;
 }
 
 // 最初からやり直す
 if (isset($_GET['reset'])) {
     unset($_SESSION['pending_result'], $_SESSION['shared_confirmed']);
-    header('Location: index.php');
+    header('Location: url2pub.php');
     exit;
 }
 
@@ -81,7 +81,7 @@ $share_url = 'https://url2ai.exbridge.jp/';
 <meta name="keywords" content="Kurage,URL2AI,AI VTuber,自動配信,ブログ自動生成,SNS自動投稿,Bluesky,はてな,AIxSNS,exbridge">
 <meta name="robots" content="index,follow">
 <meta name="author" content="EXBRIDGE, Inc.">
-<link rel="canonical" href="https://url2ai.exbridge.jp/">
+<link rel="canonical" href="https://url2ai.exbridge.jp/url2pub.php">
 <link rel="icon" href="assets/kurage_avatar_square.png" type="image/png">
 <link rel="apple-touch-icon" href="assets/kurage_avatar_square.png">
 
@@ -89,7 +89,7 @@ $share_url = 'https://url2ai.exbridge.jp/';
 <meta property="og:site_name" content="Kurage URL2AI Publisher">
 <meta property="og:title" content="Kurage URL2AI Publisher — URLを渡すだけで5メディアへ自動配信">
 <meta property="og:description" content="KurageさんがURLを解析して考察・告知文・ブログ記事を書き、Bluesky/はてな/AIxSNS/Kurageブログへ自動配信します。">
-<meta property="og:url" content="https://url2ai.exbridge.jp/">
+<meta property="og:url" content="https://url2ai.exbridge.jp/url2pub.php">
 <meta property="og:image" content="https://url2ai.exbridge.jp/assets/ogp.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -104,7 +104,7 @@ $share_url = 'https://url2ai.exbridge.jp/';
   "@context": "https://schema.org",
   "@type": "WebApplication",
   "name": "Kurage URL2AI Publisher",
-  "url": "https://url2ai.exbridge.jp/",
+  "url": "https://url2ai.exbridge.jp/url2pub.php",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Web",
   "description": "URLを解析し、告知文とブログ記事を自動生成して5つのメディアへ配信するAIパブリッシングツール。",
@@ -245,7 +245,7 @@ $share_url = 'https://url2ai.exbridge.jp/';
     <?php endforeach; ?>
 
     <p style="margin-top:24px">
-      <a href="index.php?reset=1" class="btn btn-ghost">別のURLを配信する</a>
+      <a href="url2pub.php?reset=1" class="btn btn-ghost">別のURLを配信する</a>
       <a href="history.php" class="btn btn-ghost">履歴一覧</a>
     </p>
   </div>
@@ -272,7 +272,7 @@ $share_url = 'https://url2ai.exbridge.jp/';
               <tr style="border-top:1px solid var(--panel-line)">
                 <td style="padding:10px 14px">@<?php echo u2p_h($h['username']); ?></td>
                 <td style="padding:10px 14px">
-                  <a href="index.php?step=result&id=<?php echo urlencode($h['id']); ?>"><?php echo u2p_h($h['url']); ?></a>
+                  <a href="url2pub.php?step=result&id=<?php echo urlencode($h['id']); ?>"><?php echo u2p_h($h['url']); ?></a>
                 </td>
                 <td style="padding:10px 14px;white-space:nowrap;color:var(--abyss-soft)"><?php echo u2p_h($h['created_at']); ?></td>
               </tr>
@@ -388,7 +388,7 @@ if (u2pForm) {
       });
     }).then(function (dfin) {
       if (!dfin || !dfin.ok) { throw new Error('結果の保存に失敗しました'); }
-      window.location.href = 'index.php?step=share';
+      window.location.href = 'url2pub.php?step=share';
     }).catch(function (err) {
       fail(err.message || String(err));
     });

@@ -6,7 +6,7 @@ date_default_timezone_set('Asia/Tokyo');
 
 $auth = url2ai_auth_bootstrap();
 if (empty($auth['logged_in'])) {
-    header('Location: index.php');
+    header('Location: url2pub.php');
     exit;
 }
 $records = u2p_history_load($auth['session_user']);
@@ -33,7 +33,7 @@ $records = u2p_history_load($auth['session_user']);
       <p class="tagline">@<?php echo htmlspecialchars($auth['session_user'], ENT_QUOTES, 'UTF-8'); ?> がKurageさんに配信してもらった記事の一覧です。</p>
     </div>
   </div>
-  <div class="whoami"><a href="index.php">← 新しいURLを配信する</a></div>
+  <div class="whoami"><a href="url2pub.php">← 新しいURLを配信する</a></div>
 </div></header>
 <main><div class="wrap">
 <?php if (empty($records)): ?>
@@ -41,7 +41,7 @@ $records = u2p_history_load($auth['session_user']);
 <?php else: ?>
   <?php foreach ($records as $r): ?>
     <div class="hist-card">
-      <a class="title" href="index.php?step=result&id=<?php echo urlencode($r['id']); ?>">
+      <a class="title" href="url2pub.php?step=result&id=<?php echo urlencode($r['id']); ?>">
         <?php echo htmlspecialchars(isset($r['blog']['title']) ? $r['blog']['title'] : $r['id'], ENT_QUOTES, 'UTF-8'); ?>
       </a>
       <div class="meta">

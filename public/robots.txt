@@ -3,5 +3,6 @@ Disallow: /history.php
 Disallow: /ajax.php
 Disallow: /auth_common.php
 Disallow: /lib.php
+Disallow: /config.php
 
 Sitemap: https://url2ai.exbridge.jp/sitemap.xml

@@ -15,6 +15,12 @@ URLを1つ渡すと、**Kurageさん**がその記事を読んで考察し、告
 解析・記事生成・各媒体への投稿ロジックはすべて[url2brain](https://github.com/katsushi2441/url2brain)
 が担う。url2pub自身はURL入力フォーム・結果表示・url2brainへのAPI呼び出しのみを行う薄いPHPページ。
 
+### ページ構成
+
+- `/`(`index.html`)・`/url2pub.html` — プロジェクト説明のランディングページ(英語/日本語)
+- `/url2pub.php` — 実際に使うツール本体(Xログイン必須。旧`index.php`から改名)
+- `/history.php` — ログインユーザー本人の配信履歴一覧
+
 ## デプロイ
 
 ```bash
@@ -31,9 +37,10 @@ bash scripts/deploy.sh
    1コール$1.00 USDC(Base network)の従量課金。url2pub自身はx402の署名/支払いロジックを
    持たないので、手前にx402対応のHTTPクライアント/プロキシ(例:
    [x402-fetch](https://github.com/coinbase/x402)、`bankr x402 call`)を立てて、
-   あなた自身のウォレットで支払う必要がある。**解析・告知文・ブログ記事生成のみ**カバーし、
-   `/post/*`(Bluesky/はてな/AIxSNS/Bludit/はてなブログへの実投稿)はx402エンドポイントには
-   公開されていない — 投稿は各媒体の認証情報を握っている側にしかできないため。
+   あなた自身のウォレットで支払う必要がある。解析・告知文・ブログ記事生成に加えて
+   `/post/*`(Bluesky/はてな/AIxSNS/Bludit/はてなブログ)も公開されているが、これは
+   **Kurage/EXBRIDGE自身のアカウント**へ実際に投稿するもの(x402決済を投稿の許可として扱う設計、
+   投稿文はKurage/bittensormanペルソナで自動枠付け)。あなた自身のアカウントへの投稿ではない。
 2. **自前運用: 自分のurl2brainインスタンス**(ローカルGemma4等、無料)
    [url2brain](https://github.com/katsushi2441/url2brain)を自分で立て、
    `URL2BRAIN_API_BASE`と`URL2BRAIN_API_TOKEN`をそちらに向ける。x402は経由しないので無料。

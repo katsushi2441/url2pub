@@ -1,6 +1,6 @@
 <?php
 // url2pub共通ヘルパー。url2brain APIの薄いラッパーと、Xユーザー単位の履歴保存。
-// index.php(画面描画)とajax.php(段階的な生成/配信API)の両方から使う。
+// url2pub.php(画面描画)とajax.php(段階的な生成/配信API)の両方から使う。
 
 function u2p_h($value) {
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
