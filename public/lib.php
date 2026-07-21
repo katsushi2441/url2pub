@@ -110,3 +110,26 @@ function u2p_history_find($username, $id) {
 function u2p_history_new_id() {
     return date('Ymd-His') . '-' . substr(md5(uniqid('', true)), 0, 6);
 }
+
+// 管理者用: 全ユーザーの利用履歴を横断して新しい順に返す(username, url, created_at, id)。
+// Xのユーザー名は英数字/アンダースコアのみなのでファイル名=ユーザー名としてそのまま使える。
+function u2p_history_all_users($limit = 200) {
+    if (!is_dir(U2P_HISTORY_DIR)) { return array(); }
+    $all = array();
+    foreach (glob(U2P_HISTORY_DIR . '/*.json') as $path) {
+        $username = basename($path, '.json');
+        $data = json_decode(file_get_contents($path), true);
+        if (!is_array($data)) { continue; }
+        foreach ($data as $r) {
+            $all[] = array(
+                'username' => $username,
+                'id' => isset($r['id']) ? $r['id'] : '',
+                'url' => isset($r['source']['url']) ? $r['source']['url'] : '',
+                'title' => isset($r['blog']['title']) ? $r['blog']['title'] : '',
+                'created_at' => isset($r['created_at']) ? $r['created_at'] : '',
+            );
+        }
+    }
+    usort($all, function ($a, $b) { return strcmp($b['created_at'], $a['created_at']); });
+    return array_slice($all, 0, $limit);
+}

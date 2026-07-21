@@ -54,6 +54,9 @@ $records = u2p_history_load($auth['session_user']);
 </div></main>
 <footer class="site"><div class="wrap">
   Kurage URL2AI Publisher — <a href="https://exbridge.jp/">株式会社エクスブリッジ</a>のプロダクト
+  <br><br>
+  &copy; <?php echo date('Y'); ?> EXBRIDGE, Inc. Developed by <a href="https://x.com/xb_bittensor" target="_blank" rel="noopener">bittensorman</a> ·
+  <a href="https://exbridge.jp/contact.php">お問い合わせ</a>
 </div></footer>
 </body>
 </html>

@@ -251,6 +251,39 @@ $share_url = 'https://url2ai.exbridge.jp/';
   </div>
 <?php endif; ?>
 
+<?php if (!empty($auth['is_admin'])): ?>
+  <section class="block" style="margin-top:40px">
+    <h2>管理者ビュー: 全ユーザー利用履歴</h2>
+    <div class="hist-card" style="padding:0;overflow:hidden">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead>
+          <tr style="background:var(--panel)">
+            <th style="text-align:left;padding:10px 14px">ユーザー</th>
+            <th style="text-align:left;padding:10px 14px">URL</th>
+            <th style="text-align:left;padding:10px 14px">日時</th>
+          </tr>
+        </thead>
+        <tbody>
+          <?php $all_history = u2p_history_all_users(200); ?>
+          <?php if (empty($all_history)): ?>
+            <tr><td colspan="3" style="padding:14px;color:var(--abyss-soft)">まだ利用履歴がありません。</td></tr>
+          <?php else: ?>
+            <?php foreach ($all_history as $h): ?>
+              <tr style="border-top:1px solid var(--panel-line)">
+                <td style="padding:10px 14px">@<?php echo u2p_h($h['username']); ?></td>
+                <td style="padding:10px 14px">
+                  <a href="index.php?step=result&id=<?php echo urlencode($h['id']); ?>"><?php echo u2p_h($h['url']); ?></a>
+                </td>
+                <td style="padding:10px 14px;white-space:nowrap;color:var(--abyss-soft)"><?php echo u2p_h($h['created_at']); ?></td>
+              </tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
+        </tbody>
+      </table>
+    </div>
+  </section>
+<?php endif; ?>
+
 </div></main>
 
 <footer class="site"><div class="wrap">
@@ -258,6 +291,9 @@ $share_url = 'https://url2ai.exbridge.jp/';
   頭脳は <a href="https://github.com/katsushi2441/url2brain">url2brain</a>(OSS)が担当 ·
   <a href="https://kfreqai.exbridge.jp/">kfreqai</a> · <a href="https://kfxai.exbridge.jp/">kfxai</a> ·
   <a href="https://kcbrain.exbridge.jp/">kcbrain</a> · <a href="https://kfxbrain.exbridge.jp/">kfxbrain</a>
+  <br><br>
+  &copy; <?php echo date('Y'); ?> EXBRIDGE, Inc. Developed by <a href="https://x.com/xb_bittensor" target="_blank" rel="noopener">bittensorman</a> ·
+  <a href="https://exbridge.jp/contact.php">お問い合わせ</a>
 </div></footer>
 
 <script>
