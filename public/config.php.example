@@ -1,3 +1,9 @@
 <?php
 define('URL2BRAIN_API_BASE', getenv('URL2BRAIN_API_BASE') ?: 'http://exbridge.ddns.net:18332');
 define('URL2BRAIN_API_TOKEN', getenv('URL2BRAIN_API_TOKEN') ?: '');
+
+// X(Twitter) OAuth 2.0 + PKCE(ログイン確認用、users.read scopeのみ)。
+// developer.x.comで作成したWeb App(OAuth 2.0)のClient ID/Secretを設定する。
+define('X_CLIENT_ID', getenv('X_CLIENT_ID') ?: '');
+define('X_CLIENT_SECRET', getenv('X_CLIENT_SECRET') ?: '');
+define('X_REDIRECT_URI', getenv('X_REDIRECT_URI') ?: 'https://url2ai.exbridge.jp/auth_callback.php');
