@@ -1,8 +1,20 @@
 <?php
 require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/x_auth.php';
-session_start();
+require_once __DIR__ . '/auth_common.php';
 date_default_timezone_set('Asia/Tokyo');
+
+// Xログインは既存のKurage共通ログイン基盤(aiknowledgecms.exbridge.jp/aiknowledgesns.php)に
+// 委譲する。*.exbridge.jp共通クッキーのため、他のexbridge.jpサイトで既にログイン済みなら
+// url2ai.exbridge.jpでも自動的にログイン扱いになる。
+if (isset($_GET['login'])) {
+    header('Location: ' . url2ai_auth_login_url('/index.php'));
+    exit;
+}
+if (isset($_GET['logout'])) {
+    header('Location: ' . url2ai_auth_logout_url('/index.php'));
+    exit;
+}
+$auth = url2ai_auth_bootstrap();
 
 function u2p_h($value) {
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
@@ -85,7 +97,7 @@ function u2p_tweet_intent($text, $url = '') {
     return 'https://twitter.com/intent/tweet?' . http_build_query($params);
 }
 
-$logged_in = !empty($_SESSION['x_user']);
+$logged_in = !empty($auth['logged_in']);
 $error = '';
 
 // URL送信 → 解析+5媒体配信 → 結果をsessionへ、Xシェア画面へ
@@ -214,7 +226,7 @@ footer a { font-weight: 700; }
     </div>
   </div>
   <?php if ($logged_in): ?>
-    <div class="whoami">@<?php echo u2p_h($_SESSION['x_user']['username']); ?> でログイン中<br><a href="logout.php">ログアウト</a></div>
+    <div class="whoami">@<?php echo u2p_h($auth['session_user']); ?> でログイン中<br><a href="?logout=1">ログアウト</a></div>
   <?php endif; ?>
 </header>
 
@@ -235,7 +247,7 @@ footer a { font-weight: 700; }
       現在無料でご利用いただけます。ご利用の条件として、配信後にXへ一言シェアをお願いしています。<br>
       利用を始めるにはXでログインしてください。
     </p>
-    <a class="btn btn-x" href="<?php echo u2p_h(xa_authorize_url()); ?>">𝕏 でログインして始める</a>
+    <a class="btn btn-x" href="?login=1">𝕏 でログインして始める</a>
   </div>
 
 <?php elseif ($view === 'form'): ?>
