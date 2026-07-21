@@ -1,0 +1,3 @@
+<?php
+define('URL2BRAIN_API_BASE', getenv('URL2BRAIN_API_BASE') ?: 'http://exbridge.ddns.net:18332');
+define('URL2BRAIN_API_TOKEN', getenv('URL2BRAIN_API_TOKEN') ?: '');
