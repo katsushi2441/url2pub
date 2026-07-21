@@ -25,7 +25,7 @@ function ajax_fail($msg) {
 if ($action === 'analyze') {
     $url = isset($input['url']) ? trim((string)$input['url']) : '';
     if ($url === '' || !filter_var($url, FILTER_VALIDATE_URL)) { ajax_fail('有効なURLを入力してください。'); }
-    $r = u2p_api('/v1/analyze/url', array('url' => $url, 'depth' => 'full'));
+    $r = u2p_api('/analyze/url', array('url' => $url, 'depth' => 'full'));
     if ($r['status'] !== 200 || empty($r['data']['result'])) {
         ajax_fail(isset($r['data']['detail']) ? $r['data']['detail'] : '解析に失敗しました');
     }
@@ -35,7 +35,7 @@ if ($action === 'analyze') {
 
 if ($action === 'announcement') {
     if (empty($input['source'])) { ajax_fail('source is required'); }
-    $r = u2p_api('/v1/generate/announcement', array('source' => $input['source'], 'language' => 'ja', 'tone' => 'neutral'));
+    $r = u2p_api('/generate/announcement', array('source' => $input['source'], 'language' => 'ja', 'tone' => 'neutral'));
     if ($r['status'] !== 200 || empty($r['data']['result'])) {
         ajax_fail(isset($r['data']['detail']) ? $r['data']['detail'] : '告知文の生成に失敗しました');
     }
@@ -45,7 +45,7 @@ if ($action === 'announcement') {
 
 if ($action === 'blog') {
     if (empty($input['source'])) { ajax_fail('source is required'); }
-    $r = u2p_api('/v1/generate/blog-article', array('source' => $input['source'], 'language' => 'ja', 'tone' => 'neutral'));
+    $r = u2p_api('/generate/blog-article', array('source' => $input['source'], 'language' => 'ja', 'tone' => 'neutral'));
     if ($r['status'] !== 200 || empty($r['data']['result'])) {
         ajax_fail(isset($r['data']['detail']) ? $r['data']['detail'] : 'ブログ記事の生成に失敗しました');
     }

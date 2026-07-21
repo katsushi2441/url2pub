@@ -1,5 +1,12 @@
 <?php
-define('URL2BRAIN_API_BASE', getenv('URL2BRAIN_API_BASE') ?: 'http://exbridge.ddns.net:18332');
+// OSS既定: url2brainの公開x402エンドポイント(1コール$1.00 USDC, Base network)。
+// url2pub自身はx402の署名/支払いロジックを持たない。手前にx402対応のHTTPクライアント/
+// プロキシ(例: x402-fetch, bankr x402 call)を立てて、あなた自身のウォレットで支払う前提。
+// トークンは不要(支払い自体が認可になる)。
+//
+// 自分のurl2brainインスタンス(ローカルGemma4等)を自前運用する場合は、そちらのURLと
+// トークンに差し替えれば無料で使える(x402は経由しない)。
+define('URL2BRAIN_API_BASE', getenv('URL2BRAIN_API_BASE') ?: 'https://bittensorman.xyz/url2brain');
 define('URL2BRAIN_API_TOKEN', getenv('URL2BRAIN_API_TOKEN') ?: '');
 
 // Xログインは auth_common.php(既存のKurage共通ログイン基盤、中央ハンドラは

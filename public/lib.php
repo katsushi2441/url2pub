@@ -69,23 +69,23 @@ function u2p_post_result($r) {
 }
 
 function u2p_post_bluesky($text) {
-    $r = u2p_api('/v1/post/bluesky', array('text' => $text, 'url' => '', 'confirm_post' => true));
+    $r = u2p_api('/post/bluesky', array('text' => $text, 'url' => '', 'confirm_post' => true));
     return u2p_post_result($r);
 }
 function u2p_post_hatena_bookmark($url, $text) {
-    $r = u2p_api('/v1/post/hatena-bookmark', array('url' => $url, 'comment' => mb_substr($text, 0, 90), 'tags' => array(), 'confirm_post' => true));
+    $r = u2p_api('/post/hatena-bookmark', array('url' => $url, 'comment' => mb_substr($text, 0, 90), 'tags' => array(), 'confirm_post' => true));
     return u2p_post_result($r);
 }
 function u2p_post_aixsns($text) {
-    $r = u2p_api('/v1/post/aixsns', array('content' => $text, 'author' => 'url2pub', 'confirm_post' => true));
+    $r = u2p_api('/post/aixsns', array('content' => $text, 'author' => 'url2pub', 'confirm_post' => true));
     return u2p_post_result($r);
 }
 function u2p_post_bludit($title, $body) {
-    $r = u2p_api('/v1/post/bludit', array('title' => $title, 'body_markdown' => $body, 'category' => 'url2pub', 'tags' => 'url2pub', 'confirm_post' => true));
+    $r = u2p_api('/post/bludit', array('title' => $title, 'body_markdown' => $body, 'category' => 'url2pub', 'tags' => 'url2pub', 'confirm_post' => true));
     return u2p_post_result($r);
 }
 function u2p_post_hatena_blog($title, $body) {
-    $r = u2p_api('/v1/post/hatena-blog', array('title' => $title, 'body_markdown' => $body, 'confirm_post' => true));
+    $r = u2p_api('/post/hatena-blog', array('title' => $title, 'body_markdown' => $body, 'confirm_post' => true));
     return u2p_post_result($r);
 }
 
