@@ -60,16 +60,21 @@ if ($action === 'post') {
     $source = isset($input['source']) ? $input['source'] : array('url' => '');
     $text = isset($announcement['text']) ? $announcement['text'] : '';
 
+    // 重複コンテンツ対策+媒体ごとの人格分け(LLM再生成なし・決定的な枠付け、2026-07-21方針):
+    // Bluesky/Kurageブログ = Kurageペルソナ、AIxSNS/はてなブログ = bittensormanペルソナ。
+    // はてなブックマークは短いコメントのため枠なし。
     if ($platform === 'bluesky') {
-        $result = u2p_post_bluesky($text);
+        $result = u2p_post_bluesky(u2p_persona_frame($text, 'kurage', 'announcement'));
     } elseif ($platform === 'hatena-bookmark') {
         $result = u2p_post_hatena_bookmark(isset($source['url']) ? $source['url'] : '', $text);
     } elseif ($platform === 'aixsns') {
-        $result = u2p_post_aixsns($text);
+        $result = u2p_post_aixsns(u2p_persona_frame($text, 'bittensorman', 'announcement'));
     } elseif ($platform === 'bludit') {
-        $result = u2p_post_bludit(isset($blog['title']) ? $blog['title'] : '', isset($blog['body_markdown']) ? $blog['body_markdown'] : '');
+        $body = isset($blog['body_markdown']) ? $blog['body_markdown'] : '';
+        $result = u2p_post_bludit(isset($blog['title']) ? $blog['title'] : '', u2p_persona_frame($body, 'kurage', 'blog'));
     } elseif ($platform === 'hatena-blog') {
-        $result = u2p_post_hatena_blog(isset($blog['title']) ? $blog['title'] : '', isset($blog['body_markdown']) ? $blog['body_markdown'] : '');
+        $body2 = isset($blog['body_markdown']) ? $blog['body_markdown'] : '';
+        $result = u2p_post_hatena_blog(isset($blog['title']) ? $blog['title'] : '', u2p_persona_frame($body2, 'bittensorman', 'blog'));
     } else {
         ajax_fail('unknown platform: ' . $platform);
         exit;

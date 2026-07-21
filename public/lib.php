@@ -6,6 +6,26 @@ function u2p_h($value) {
     return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
 }
 
+// ペルソナ別の枠付け(LLM再生成なし、決定的なテンプレート処理)。同一文面がそのまま
+// 複数媒体に並ぶ重複コンテンツを緩和しつつ、媒体ごとにキャラクター性を出す。
+// Bluesky(announcement)は280字制限があるため枠を最小限にする。
+function u2p_persona_frame($text, $persona, $kind) {
+    $text = trim((string)$text);
+    if ($persona === 'kurage') {
+        if ($kind === 'announcement') {
+            return '🪼 ' . $text;
+        }
+        return "🪼 Kurageです。今日はこちらをご紹介しますね。\n\n" . $text . "\n\n---\n*— Kurage*";
+    }
+    if ($persona === 'bittensorman') {
+        if ($kind === 'announcement') {
+            return '【開発者より】' . "\n" . $text . "\n— bittensorman";
+        }
+        return "開発者・経営者の視点から。\n\n" . $text . "\n\n---\n*— bittensorman（開発者・経営者）*";
+    }
+    return $text;
+}
+
 function u2p_api($path, $payload, $timeout = 180) {
     $base = rtrim(URL2BRAIN_API_BASE, '/');
     $headers = array('Accept: application/json', 'Content-Type: application/json');
