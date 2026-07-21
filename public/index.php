@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/auth_common.php';
+require_once __DIR__ . '/lib.php';
 date_default_timezone_set('Asia/Tokyo');
 
 // Xログインは既存のKurage共通ログイン基盤(aiknowledgecms.exbridge.jp/aiknowledgesns.php)に
@@ -15,39 +16,9 @@ if (isset($_GET['logout'])) {
     exit;
 }
 $auth = url2ai_auth_bootstrap();
+$logged_in = !empty($auth['logged_in']);
 
-function u2p_h($value) {
-    return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8');
-}
-
-function u2p_api($path, $payload, $timeout = 180) {
-    $base = rtrim(URL2BRAIN_API_BASE, '/');
-    $headers = array('Accept: application/json', 'Content-Type: application/json');
-    if (URL2BRAIN_API_TOKEN !== '') {
-        $headers[] = 'X-URL2BRAIN-Token: ' . URL2BRAIN_API_TOKEN;
-    }
-    $ch = curl_init($base . $path);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 8);
-    curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
-    curl_setopt($ch, CURLOPT_POST, true);
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-    $body = curl_exec($ch);
-    $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
-    $error = curl_error($ch);
-    curl_close($ch);
-    if ($body === false || $error !== '') {
-        return array('status' => 502, 'data' => array('ok' => false, 'detail' => $error !== '' ? $error : 'url2brain接続に失敗しました'));
-    }
-    $decoded = json_decode($body, true);
-    if (!is_array($decoded)) {
-        return array('status' => 502, 'data' => array('ok' => false, 'detail' => 'url2brainから不正な応答'));
-    }
-    return array('status' => $status ? $status : 502, 'data' => $decoded);
-}
-
-// 株式会社エクスブリッジが運営する5メディア。post/*の順に対応。
+// 株式会社エクスブリッジが運営する5メディア。
 $MEDIA = array(
     array('key' => 'bluesky', 'label' => 'Bluesky', 'note' => '@bittensorman.bsky.social'),
     array('key' => 'hatena-bookmark', 'label' => 'はてなブックマーク', 'note' => ''),
@@ -55,81 +26,6 @@ $MEDIA = array(
     array('key' => 'bludit', 'label' => 'Kurageブログ', 'note' => 'kurage.exbridge.jp/blog (url2pubカテゴリ)'),
     array('key' => 'hatena-blog', 'label' => 'はてなブログ', 'note' => 'xb-bittensor.hatenablog.com'),
 );
-
-function u2p_post_bluesky($text) {
-    $r = u2p_api('/v1/post/bluesky', array('text' => $text, 'url' => '', 'confirm_post' => true));
-    return u2p_post_result($r);
-}
-function u2p_post_hatena_bookmark($url, $text) {
-    $r = u2p_api('/v1/post/hatena-bookmark', array('url' => $url, 'comment' => mb_substr($text, 0, 90), 'tags' => array(), 'confirm_post' => true));
-    return u2p_post_result($r);
-}
-function u2p_post_aixsns($text) {
-    $r = u2p_api('/v1/post/aixsns', array('content' => $text, 'author' => 'url2pub', 'confirm_post' => true));
-    return u2p_post_result($r);
-}
-function u2p_post_bludit($title, $body) {
-    $r = u2p_api('/v1/post/bludit', array('title' => $title, 'body_markdown' => $body, 'category' => 'url2pub', 'tags' => 'url2pub', 'confirm_post' => true));
-    return u2p_post_result($r);
-}
-function u2p_post_hatena_blog($title, $body) {
-    $r = u2p_api('/v1/post/hatena-blog', array('title' => $title, 'body_markdown' => $body, 'confirm_post' => true));
-    return u2p_post_result($r);
-}
-function u2p_post_result($r) {
-    $detail = isset($r['data']['result']['detail']) ? $r['data']['result']['detail'] : array();
-    $ok = !empty($r['data']['result']['ok']);
-    $url = isset($detail['post_url']) ? $detail['post_url'] : (isset($detail['permalink']) ? $detail['permalink'] : '');
-    if ($url === '' && !empty($detail['item']['id'])) {
-        $url = 'https://aixec.exbridge.jp/#post-' . $detail['item']['id'];
-    }
-    if ($ok) {
-        $err = '';
-    } else {
-        $err = isset($r['data']['detail']) ? $r['data']['detail'] : (isset($detail['error']) ? $detail['error'] : '投稿に失敗しました');
-    }
-    return array('ok' => $ok, 'url' => $url, 'error' => $err);
-}
-
-function u2p_tweet_intent($text, $url = '') {
-    $params = array('text' => $text);
-    if ($url !== '') { $params['url'] = $url; }
-    return 'https://twitter.com/intent/tweet?' . http_build_query($params);
-}
-
-$logged_in = !empty($auth['logged_in']);
-$error = '';
-
-// URL送信 → 解析+5媒体配信 → 結果をsessionへ、Xシェア画面へ
-if ($logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['url'])) {
-    $submitted_url = trim((string)$_POST['url']);
-    if ($submitted_url === '' || !filter_var($submitted_url, FILTER_VALIDATE_URL)) {
-        $error = '有効なURLを入力してください。';
-    } else {
-        $gen = u2p_api('/v1/generate/from-url', array('url' => $submitted_url, 'language' => 'ja', 'tone' => 'neutral'));
-        if ($gen['status'] !== 200 || empty($gen['data']['result'])) {
-            $detail_msg = isset($gen['data']['detail']) ? $gen['data']['detail'] : (isset($gen['data']['error']) ? $gen['data']['error'] : '不明なエラー');
-            $error = '解析に失敗しました: ' . u2p_h($detail_msg);
-        } else {
-            $result = $gen['data']['result'];
-            $source = $result['source'];
-            $announcement = $result['announcement'];
-            $blog = $result['blog_article'];
-
-            $posted = array();
-            $posted[] = array('key' => 'bluesky', 'label' => 'Bluesky') + u2p_post_bluesky($announcement['text']);
-            $posted[] = array('key' => 'hatena-bookmark', 'label' => 'はてなブックマーク') + u2p_post_hatena_bookmark($source['url'], $announcement['text']);
-            $posted[] = array('key' => 'aixsns', 'label' => 'AIxSNS') + u2p_post_aixsns($announcement['text']);
-            $posted[] = array('key' => 'bludit', 'label' => 'Kurageブログ') + u2p_post_bludit($blog['title'], $blog['body_markdown']);
-            $posted[] = array('key' => 'hatena-blog', 'label' => 'はてなブログ') + u2p_post_hatena_blog($blog['title'], $blog['body_markdown']);
-
-            $_SESSION['pending_result'] = array('source' => $source, 'announcement' => $announcement, 'blog' => $blog, 'posted' => $posted);
-            unset($_SESSION['shared_confirmed']);
-            header('Location: index.php?step=share');
-            exit;
-        }
-    }
-}
 
 // Xでシェア完了(自己申告) → 結果画面へ
 if ($logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm_share'])) {
@@ -145,17 +41,33 @@ if (isset($_GET['reset'])) {
     exit;
 }
 
+$history_id = isset($_GET['id']) ? (string)$_GET['id'] : '';
+$pending = null;
+$is_history_view = false;
+
+if ($logged_in && $history_id !== '') {
+    // 履歴詳細: 本人の履歴からのみ読む
+    $record = u2p_history_find($auth['session_user'], $history_id);
+    if ($record !== null) {
+        $pending = $record;
+        $is_history_view = true;
+    }
+} elseif (!empty($_SESSION['pending_result'])) {
+    $pending = $_SESSION['pending_result'];
+}
+
 if (!$logged_in) {
     $view = 'login';
-} elseif (!empty($_SESSION['pending_result']) && empty($_SESSION['shared_confirmed'])) {
+} elseif ($is_history_view) {
+    $view = 'result';
+} elseif ($pending && empty($_SESSION['shared_confirmed'])) {
     $view = 'share';
-} elseif (!empty($_SESSION['pending_result']) && !empty($_SESSION['shared_confirmed'])) {
+} elseif ($pending && !empty($_SESSION['shared_confirmed'])) {
     $view = 'result';
 } else {
     $view = 'form';
 }
 
-$pending = isset($_SESSION['pending_result']) ? $_SESSION['pending_result'] : null;
 $share_text = 'Kurage URL2AI Publisherを試してみました。URLを渡すだけでKurageさんが記事を読んで告知文とブログ記事を書き、5つのメディアへ自動配信してくれます。';
 $share_url = 'https://url2ai.exbridge.jp/';
 ?>
@@ -211,6 +123,9 @@ label { font-size: 13px; font-weight: 800; color: var(--accent2); display: block
 .blog h3 { font-size: 16px; margin-bottom: 10px; }
 .blog p { margin: 10px 0; font-size: 14px; color: #3a3560; }
 textarea.sharebox { width: 100%; min-height: 90px; border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 14px; font-size: 14px; font-family: inherit; margin-bottom: 14px; }
+#u2pSteps { list-style: none; }
+#u2pSteps li { padding: 8px 0; font-size: 14px; border-bottom: 1px solid var(--line); }
+#u2pSteps li:last-child { border-bottom: none; }
 footer { text-align: center; color: var(--muted); font-size: 12.5px; padding: 40px 20px 46px; border-top: 1px solid var(--line); margin-top: 30px; }
 footer a { font-weight: 700; }
 </style>
@@ -226,7 +141,8 @@ footer a { font-weight: 700; }
     </div>
   </div>
   <?php if ($logged_in): ?>
-    <div class="whoami">@<?php echo u2p_h($auth['session_user']); ?> でログイン中<br><a href="?logout=1">ログアウト</a></div>
+    <div class="whoami">@<?php echo u2p_h($auth['session_user']); ?> でログイン中<br>
+      <a href="history.php">履歴</a> · <a href="?logout=1">ログアウト</a></div>
   <?php endif; ?>
 </header>
 
@@ -260,12 +176,16 @@ footer a { font-weight: 700; }
       <?php endforeach; ?>
     </div>
   </div>
-  <form method="post" class="card">
+  <form id="u2pForm" class="card">
     <label for="url">配信したいページのURL</label>
     <input type="url" id="url" name="url" placeholder="https://example.com/article" required>
     <button type="submit" class="btn">Kurageさんに配信してもらう</button>
   </form>
-  <?php if ($error !== ''): ?><div class="error"><?php echo $error; ?></div><?php endif; ?>
+  <div id="u2pError" class="error" style="display:none"></div>
+  <div id="u2pProgress" class="card" style="display:none">
+    <h2 style="font-size:16px;margin-bottom:6px">Kurageさんが作業中です🪼</h2>
+    <ul id="u2pSteps"></ul>
+  </div>
 
 <?php elseif ($view === 'share' && $pending): ?>
   <div class="card">
@@ -286,6 +206,13 @@ footer a { font-weight: 700; }
 <?php elseif ($view === 'result' && $pending): ?>
   <?php $announcement = $pending['announcement']; $blog = $pending['blog']; $posted = $pending['posted']; ?>
   <div class="result">
+    <?php if ($is_history_view): ?>
+      <p style="font-size:12.5px;color:var(--muted);margin-bottom:10px">
+        履歴: <?php echo u2p_h(isset($pending['created_at']) ? $pending['created_at'] : ''); ?> ·
+        元URL: <a href="<?php echo u2p_h($pending['source']['url']); ?>" target="_blank" rel="noopener"><?php echo u2p_h($pending['source']['url']); ?></a> ·
+        <a href="history.php">履歴一覧へ戻る</a>
+      </p>
+    <?php endif; ?>
     <h2>告知用記事</h2>
     <div class="item">
       <div class="text" id="ann-text"><?php echo u2p_h($announcement['text']); ?></div>
@@ -315,13 +242,13 @@ footer a { font-weight: 700; }
       <div class="item">
         <div class="actions">
           <strong style="min-width:150px;display:inline-block"><?php echo u2p_h($p['label']); ?></strong>
-          <span class="status <?php echo $p['ok'] ? 'ok' : 'ng'; ?>"><?php echo $p['ok'] ? '配信済み' : '失敗'; ?></span>
-          <?php if ($p['ok'] && $p['url'] !== ''): ?>
+          <span class="status <?php echo !empty($p['ok']) ? 'ok' : 'ng'; ?>"><?php echo !empty($p['ok']) ? '配信済み' : '失敗'; ?></span>
+          <?php if (!empty($p['ok']) && $p['url'] !== ''): ?>
             <a href="<?php echo u2p_h($p['url']); ?>" target="_blank" rel="noopener" id="url-<?php echo $i; ?>"><?php echo u2p_h($p['url']); ?></a>
             <a class="btn btn-x btn-sm" href="<?php echo u2p_h(u2p_tweet_intent($p['label'] . ': ', $p['url'])); ?>" target="_blank" rel="noopener">𝕏 投稿</a>
             <button type="button" class="btn btn-ghost btn-sm" onclick="u2pCopy('url-<?php echo $i; ?>')">コピー</button>
-          <?php elseif (!$p['ok']): ?>
-            <span style="font-size:12.5px;color:var(--muted)"><?php echo u2p_h($p['error']); ?></span>
+          <?php elseif (empty($p['ok'])): ?>
+            <span style="font-size:12.5px;color:var(--muted)"><?php echo u2p_h(isset($p['error']) ? $p['error'] : ''); ?></span>
           <?php else: ?>
             &mdash;
           <?php endif; ?>
@@ -329,7 +256,10 @@ footer a { font-weight: 700; }
       </div>
     <?php endforeach; ?>
 
-    <p style="margin-top:24px"><a href="index.php?reset=1" class="btn btn-ghost">別のURLを配信する</a></p>
+    <p style="margin-top:24px">
+      <a href="index.php?reset=1" class="btn btn-ghost">別のURLを配信する</a>
+      <a href="history.php" class="btn btn-ghost">履歴一覧</a>
+    </p>
   </div>
 <?php endif; ?>
 
@@ -346,14 +276,98 @@ footer a { font-weight: 700; }
 function u2pCopy(id) {
   var el = document.getElementById(id);
   var text = el.tagName === 'TEXTAREA' ? el.value : el.textContent;
-  navigator.clipboard.writeText(text).then(function () {
-    alert('コピーしました');
-  });
+  navigator.clipboard.writeText(text).then(function () { alert('コピーしました'); });
 }
 function u2pCopyText(id) {
   var el = document.getElementById(id);
-  navigator.clipboard.writeText(el.value).then(function () {
-    alert('コピーしました');
+  navigator.clipboard.writeText(el.value).then(function () { alert('コピーしました'); });
+}
+
+var u2pForm = document.getElementById('u2pForm');
+if (u2pForm) {
+  var STEPS = [
+    { key: 'analyze', label: '記事を解析中…' },
+    { key: 'announcement', label: '告知文を生成中…' },
+    { key: 'blog', label: 'ブログ記事を生成中…' },
+    { key: 'post-bluesky', label: 'Blueskyへ配信中…' },
+    { key: 'post-hatena-bookmark', label: 'はてなブックマークへ配信中…' },
+    { key: 'post-aixsns', label: 'AIxSNSへ配信中…' },
+    { key: 'post-bludit', label: 'Kurageブログへ配信中…' },
+    { key: 'post-hatena-blog', label: 'はてなブログへ配信中…' }
+  ];
+  var PLATFORMS = [
+    { key: 'bluesky', label: 'Bluesky' },
+    { key: 'hatena-bookmark', label: 'はてなブックマーク' },
+    { key: 'aixsns', label: 'AIxSNS' },
+    { key: 'bludit', label: 'Kurageブログ' },
+    { key: 'hatena-blog', label: 'はてなブログ' }
+  ];
+
+  function u2pMark(key, state, note) {
+    var li = document.getElementById('step-' + key);
+    if (!li) return;
+    var icon = state === 'ok' ? '✅' : (state === 'ng' ? '❌' : '⏳');
+    li.textContent = icon + ' ' + li.getAttribute('data-label') + (note ? '（' + note + '）' : '');
+  }
+
+  u2pForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var url = document.getElementById('url').value;
+    var errEl = document.getElementById('u2pError');
+    errEl.style.display = 'none';
+    u2pForm.style.display = 'none';
+    var progressEl = document.getElementById('u2pProgress');
+    progressEl.style.display = 'block';
+    var stepsEl = document.getElementById('u2pSteps');
+    stepsEl.innerHTML = STEPS.map(function (s) {
+      return '<li id="step-' + s.key + '" data-label="' + s.label + '">⏳ ' + s.label + '</li>';
+    }).join('');
+
+    function callAjax(action, platform, body) {
+      var qs = 'ajax.php?action=' + action + (platform ? '&platform=' + platform : '');
+      return fetch(qs, { method: 'POST', body: JSON.stringify(body) }).then(function (r) { return r.json(); });
+    }
+
+    function fail(msg) {
+      progressEl.style.display = 'none';
+      u2pForm.style.display = 'block';
+      errEl.textContent = msg;
+      errEl.style.display = 'block';
+    }
+
+    callAjax('analyze', null, { url: url }).then(function (d) {
+      if (!d.ok) { throw new Error(d.error || '解析に失敗しました'); }
+      u2pMark('analyze', 'ok');
+      var source = d.source;
+      return callAjax('announcement', null, { source: source }).then(function (d2) {
+        if (!d2.ok) { throw new Error(d2.error || '告知文の生成に失敗しました'); }
+        u2pMark('announcement', 'ok');
+        var announcement = d2.announcement;
+        return callAjax('blog', null, { source: source }).then(function (d3) {
+          if (!d3.ok) { throw new Error(d3.error || 'ブログ記事の生成に失敗しました'); }
+          u2pMark('blog', 'ok');
+          var blog = d3.blog;
+          var posted = [];
+          var chain = Promise.resolve();
+          PLATFORMS.forEach(function (p) {
+            chain = chain.then(function () {
+              return callAjax('post', p.key, { source: source, announcement: announcement, blog: blog }).then(function (dp) {
+                u2pMark('post-' + p.key, dp.ok ? 'ok' : 'ng', dp.ok ? '' : (dp.error || '失敗'));
+                posted.push({ key: p.key, label: p.label, ok: !!dp.ok, url: dp.url || '', error: dp.error || '' });
+              });
+            });
+          });
+          return chain.then(function () {
+            return callAjax('finish', null, { source: source, announcement: announcement, blog: blog, posted: posted });
+          });
+        });
+      });
+    }).then(function (dfin) {
+      if (!dfin || !dfin.ok) { throw new Error('結果の保存に失敗しました'); }
+      window.location.href = 'index.php?step=share';
+    }).catch(function (err) {
+      fail(err.message || String(err));
+    });
   });
 }
 </script>

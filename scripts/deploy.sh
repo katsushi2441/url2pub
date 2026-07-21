@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 set -a; . /home/kojima/work/aixec/.env; set +a
 
 REMOTE="/web/url2ai_exbridge_jp"
-for f in .htaccess index.php config.php auth_common.php assets/kurage_avatar.webp assets/kurage_avatar.png; do
+for f in .htaccess index.php config.php auth_common.php lib.php ajax.php history.php assets/kurage_avatar.webp assets/kurage_avatar.png; do
   curl --fail --ftp-create-dirs -T "public/$f" "ftp://${FTP_USER}:${FTP_PASS}@${FTP_HOST}${REMOTE}/$f"
   echo "deployed public/$f"
 done
