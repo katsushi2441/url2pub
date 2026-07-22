@@ -9,6 +9,18 @@
 define('URL2BRAIN_API_BASE', getenv('URL2BRAIN_API_BASE') ?: 'https://bittensorman.xyz/url2brain');
 define('URL2BRAIN_API_TOKEN', getenv('URL2BRAIN_API_TOKEN') ?: '');
 
+// URLAI利用特典。RQDB4AIのoperateトークンは、サーバ側で下記1関数だけを
+// enqueueできるように制限する。Bankr APIキーはWEBサーバには置かない。
+define('RQDB4AI_API_BASE', getenv('RQDB4AI_API_BASE') ?: 'http://127.0.0.1:18300');
+define('RQDB4AI_OPERATE_TOKEN', getenv('RQDB4AI_OPERATE_TOKEN') ?: '');
+define('URL2PUB_REWARD_ENABLED', filter_var(getenv('URL2PUB_REWARD_ENABLED') ?: '0', FILTER_VALIDATE_BOOLEAN));
+define('URL2PUB_REWARD_AMOUNT', '10000');
+define('URL2PUB_REWARD_LIMIT', 1000);
+define('URL2PUB_REWARD_QUEUE', 'url2pub-reward');
+define('URL2PUB_REWARD_FUNCTION', 'url2pub_reward_jobs.send_urlai_reward');
+define('URL2PUB_REWARD_CALLBACK_URL', getenv('URL2PUB_REWARD_CALLBACK_URL') ?: 'https://url2ai.exbridge.jp/reward-worker.php');
+define('URL2PUB_REWARD_CALLBACK_SECRET', getenv('URL2PUB_REWARD_CALLBACK_SECRET') ?: '');
+
 // Xログインは auth_common.php(既存のKurage共通ログイン基盤、中央ハンドラは
 // aiknowledgecms.exbridge.jp/aiknowledgesns.php)をそのまま使う。X API Key/Secretは
 // そちら側のx_api_keys.shに既に登録済みのため、ここでは何も設定不要。

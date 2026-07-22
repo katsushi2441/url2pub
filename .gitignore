@@ -1,2 +1,5 @@
 public/config.php
 public/storage/
+storage/
+__pycache__/
+*.pyc

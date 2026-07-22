@@ -36,7 +36,7 @@ if ($logged_in && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['confirm
 
 // 最初からやり直す
 if (isset($_GET['reset'])) {
-    unset($_SESSION['pending_result'], $_SESSION['shared_confirmed']);
+    unset($_SESSION['pending_result'], $_SESSION['shared_confirmed'], $_SESSION['u2p_run']);
     header('Location: url2pub.php');
     exit;
 }
@@ -55,6 +55,10 @@ if ($logged_in && $history_id !== '') {
 } elseif (!empty($_SESSION['pending_result'])) {
     $pending = $_SESSION['pending_result'];
 }
+$reward_claim = null;
+if ($pending && !empty($pending['reward_claim_id'])) {
+    $reward_claim = u2p_reward_find($pending['reward_claim_id']);
+}
 
 if (!$logged_in) {
     $view = 'login';
@@ -68,7 +72,7 @@ if (!$logged_in) {
     $view = 'form';
 }
 
-$share_text = 'Kurage URL2AI Publisherを試してみました。URLを渡すだけでKurageさんが記事を読んで告知文とブログ記事を書き、5つのメディアへ自動配信してくれます。';
+$share_text = 'Kurage URL2AI Publisherを試してみました。URLを渡すだけでKurageさんが記事を読んで告知文とブログ記事を書き、5つのメディアへ自動配信。利用者向けの10,000 URLAI特典もあります。';
 $share_url = 'https://url2ai.exbridge.jp/';
 ?>
 <!doctype html>
@@ -148,7 +152,8 @@ $share_url = 'https://url2ai.exbridge.jp/';
   </div>
   <div class="card" style="text-align:center">
     <p style="font-size:13.5px;color:var(--abyss-soft);margin-bottom:16px">
-      現在無料でご利用いただけます。ご利用の条件として、配信後にXへ一言シェアをお願いしています。<br>
+      現在無料でご利用いただけます。<?php if (u2p_reward_enabled()): ?>先着1,000人へ、1人1回10,000 URLAIの利用特典があります。<br><?php endif; ?>
+      ご利用の条件として、配信後にXへ一言シェアをお願いしています。<br>
       利用を始めるにはXでログインしてください。
     </p>
     <a class="btn btn-x" href="?login=1">𝕏 でログインして始める</a>
@@ -165,6 +170,17 @@ $share_url = 'https://url2ai.exbridge.jp/';
     </div>
   </div>
   <form id="u2pForm" class="card">
+    <?php if (u2p_reward_enabled()): ?>
+      <div class="reward-banner">
+        <div><span class="reward-kicker">URLAI USER REWARD</span><strong>10,000 URLAI</strong></div>
+        <p>先着1,000人・XアカウントとBaseウォレットにつき1回。5媒体への配信は、媒体側で失敗しても特典対象です。</p>
+      </div>
+      <div class="wallet-row">
+        <button type="button" id="u2pConnectWallet" class="btn btn-violet">Baseウォレットを接続</button>
+        <span id="u2pWalletState">未接続</span>
+      </div>
+      <input type="hidden" id="u2pWallet" value="">
+    <?php endif; ?>
     <label for="url">配信したいページのURL</label>
     <input type="url" id="url" name="url" placeholder="https://example.com/article" required>
     <button type="submit" class="btn">Kurageさんに配信してもらう</button>
@@ -181,6 +197,15 @@ $share_url = 'https://url2ai.exbridge.jp/';
     <p style="font-size:13.5px;color:var(--abyss-soft);margin-bottom:16px">
       無料でのご利用にあたり、下の内容でXへ一言シェアをお願いします。投稿後、下のボタンから結果画面へ進んでください。
     </p>
+    <?php if ($reward_claim): ?>
+      <div class="reward-status" data-claim-id="<?php echo u2p_h($reward_claim['id']); ?>">
+        <strong>10,000 URLAI 利用特典</strong>
+        <span class="reward-state"><?php echo $reward_claim['status'] === 'sent' ? '送金済み' : '送金処理中'; ?></span>
+        <small><?php echo u2p_h(substr($reward_claim['wallet'], 0, 6) . '...' . substr($reward_claim['wallet'], -4)); ?></small>
+      </div>
+    <?php elseif (!empty($pending['reward_status']) && $pending['reward_status'] !== 'disabled'): ?>
+      <div class="reward-status"><strong>URLAI 利用特典</strong><span class="reward-state">申請済み</span></div>
+    <?php endif; ?>
     <textarea class="sharebox" id="shareText" readonly><?php echo u2p_h($share_text . ' ' . $share_url); ?></textarea>
     <div class="item actions">
       <a class="btn btn-x" href="<?php echo u2p_h(u2p_tweet_intent($share_text, $share_url)); ?>" target="_blank" rel="noopener">𝕏 で投稿する</a>
@@ -194,6 +219,16 @@ $share_url = 'https://url2ai.exbridge.jp/';
 <?php elseif ($view === 'result' && $pending): ?>
   <?php $announcement = $pending['announcement']; $blog = $pending['blog']; $posted = $pending['posted']; ?>
   <div class="result">
+    <?php if ($reward_claim): ?>
+      <div class="reward-status" data-claim-id="<?php echo u2p_h($reward_claim['id']); ?>">
+        <strong><?php echo u2p_h($reward_claim['amount']); ?> URLAI 利用特典</strong>
+        <span class="reward-state"><?php echo $reward_claim['status'] === 'sent' ? '送金済み' : '送金処理中'; ?></span>
+        <small><?php echo u2p_h(substr($reward_claim['wallet'], 0, 6) . '...' . substr($reward_claim['wallet'], -4)); ?></small>
+        <?php if (!empty($reward_claim['tx_hash'])): ?>
+          <a href="https://basescan.org/tx/<?php echo rawurlencode($reward_claim['tx_hash']); ?>" target="_blank" rel="noopener">Basescanで確認</a>
+        <?php endif; ?>
+      </div>
+    <?php endif; ?>
     <?php if ($is_history_view): ?>
       <p style="font-size:12.5px;color:var(--abyss-soft);margin-bottom:10px">
         履歴: <?php echo u2p_h(isset($pending['created_at']) ? $pending['created_at'] : ''); ?> ·
@@ -317,7 +352,8 @@ if (u2pForm) {
     { key: 'post-hatena-bookmark', label: 'はてなブックマークへ配信中…' },
     { key: 'post-aixsns', label: 'AIxSNSへ配信中…' },
     { key: 'post-bludit', label: 'Kurageブログへ配信中…' },
-    { key: 'post-hatena-blog', label: 'はてなブログへ配信中…' }
+    { key: 'post-hatena-blog', label: 'はてなブログへ配信中…' },
+    { key: 'reward', label: 'URLAI利用特典を受付中…' }
   ];
   var PLATFORMS = [
     { key: 'bluesky', label: 'Bluesky' },
@@ -334,11 +370,60 @@ if (u2pForm) {
     li.textContent = icon + ' ' + li.getAttribute('data-label') + (note ? '（' + note + '）' : '');
   }
 
-  u2pForm.addEventListener('submit', function (e) {
+  var walletInput = document.getElementById('u2pWallet');
+  var walletState = document.getElementById('u2pWalletState');
+  var walletButton = document.getElementById('u2pConnectWallet');
+
+  function shortWallet(address) { return address.slice(0, 6) + '...' + address.slice(-4); }
+  function setWallet(address) {
+    if (walletInput) walletInput.value = address || '';
+    if (walletState) walletState.textContent = address ? shortWallet(address) + ' / Base' : '未接続';
+    if (walletButton) walletButton.textContent = address ? '接続済み' : 'Baseウォレットを接続';
+  }
+  async function connectWallet() {
+    if (!window.ethereum) throw new Error('MetaMaskなどのEVMウォレットが必要です。');
+    var accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    if (!accounts || !accounts[0]) throw new Error('ウォレットを確認できませんでした。');
+    try {
+      await window.ethereum.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: '0x2105' }] });
+    } catch (switchError) {
+      if (switchError && switchError.code === 4902) {
+        await window.ethereum.request({ method: 'wallet_addEthereumChain', params: [{
+          chainId: '0x2105', chainName: 'Base', nativeCurrency: { name: 'Ether', symbol: 'ETH', decimals: 18 },
+          rpcUrls: ['https://mainnet.base.org'], blockExplorerUrls: ['https://basescan.org']
+        }] });
+      } else { throw switchError; }
+    }
+    setWallet(accounts[0].toLowerCase());
+    return accounts[0].toLowerCase();
+  }
+  if (walletButton) walletButton.addEventListener('click', function () {
+    connectWallet().catch(function (err) {
+      var el = document.getElementById('u2pError');
+      el.textContent = err.message || String(err); el.style.display = 'block';
+    });
+  });
+  if (window.ethereum) {
+    window.ethereum.request({ method: 'eth_accounts' }).then(function (accounts) {
+      if (accounts && accounts[0]) setWallet(accounts[0].toLowerCase());
+    });
+    if (window.ethereum.on) window.ethereum.on('accountsChanged', function (accounts) {
+      setWallet(accounts && accounts[0] ? accounts[0].toLowerCase() : '');
+    });
+  }
+
+  u2pForm.addEventListener('submit', async function (e) {
     e.preventDefault();
     var url = document.getElementById('url').value;
     var errEl = document.getElementById('u2pError');
     errEl.style.display = 'none';
+    var wallet = walletInput ? walletInput.value : '';
+    if (walletInput && !wallet) {
+      try { wallet = await connectWallet(); }
+      catch (walletError) {
+        errEl.textContent = walletError.message || String(walletError); errEl.style.display = 'block'; return;
+      }
+    }
     u2pForm.style.display = 'none';
     var progressEl = document.getElementById('u2pProgress');
     progressEl.style.display = 'block';
@@ -349,7 +434,7 @@ if (u2pForm) {
 
     function callAjax(action, platform, body) {
       var qs = 'ajax.php?action=' + action + (platform ? '&platform=' + platform : '');
-      return fetch(qs, { method: 'POST', body: JSON.stringify(body) }).then(function (r) { return r.json(); });
+      return fetch(qs, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) { return r.json(); });
     }
 
     function fail(msg) {
@@ -359,15 +444,17 @@ if (u2pForm) {
       errEl.style.display = 'block';
     }
 
-    callAjax('analyze', null, { url: url }).then(function (d) {
+    var runId = '';
+    callAjax('analyze', null, { url: url, wallet: wallet }).then(function (d) {
       if (!d.ok) { throw new Error(d.error || '解析に失敗しました'); }
       u2pMark('analyze', 'ok');
+      runId = d.run_id;
       var source = d.source;
-      return callAjax('announcement', null, { source: source }).then(function (d2) {
+      return callAjax('announcement', null, { run_id: runId, source: source }).then(function (d2) {
         if (!d2.ok) { throw new Error(d2.error || '告知文の生成に失敗しました'); }
         u2pMark('announcement', 'ok');
         var announcement = d2.announcement;
-        return callAjax('blog', null, { source: source }).then(function (d3) {
+        return callAjax('blog', null, { run_id: runId, source: source }).then(function (d3) {
           if (!d3.ok) { throw new Error(d3.error || 'ブログ記事の生成に失敗しました'); }
           u2pMark('blog', 'ok');
           var blog = d3.blog;
@@ -375,25 +462,50 @@ if (u2pForm) {
           var chain = Promise.resolve();
           PLATFORMS.forEach(function (p) {
             chain = chain.then(function () {
-              return callAjax('post', p.key, { source: source, announcement: announcement, blog: blog }).then(function (dp) {
+              return callAjax('post', p.key, { run_id: runId, source: source, announcement: announcement, blog: blog }).then(function (dp) {
                 u2pMark('post-' + p.key, dp.ok ? 'ok' : 'ng', dp.ok ? '' : (dp.error || '失敗'));
                 posted.push({ key: p.key, label: p.label, ok: !!dp.ok, url: dp.url || '', error: dp.error || '' });
+              }).catch(function (postError) {
+                var message = postError.message || String(postError);
+                u2pMark('post-' + p.key, 'ng', message);
+                posted.push({ key: p.key, label: p.label, ok: false, url: '', error: message });
               });
             });
           });
           return chain.then(function () {
-            return callAjax('finish', null, { source: source, announcement: announcement, blog: blog, posted: posted });
+            return callAjax('finish', null, { run_id: runId, source: source, announcement: announcement, blog: blog, posted: posted });
           });
         });
       });
     }).then(function (dfin) {
       if (!dfin || !dfin.ok) { throw new Error('結果の保存に失敗しました'); }
+      u2pMark('reward', dfin.reward && dfin.reward.status !== 'closed' ? 'ok' : 'ng', dfin.reward ? (dfin.reward.message || '') : '');
       window.location.href = 'url2pub.php?step=share';
     }).catch(function (err) {
       fail(err.message || String(err));
     });
   });
 }
+
+document.querySelectorAll('.reward-status[data-claim-id]').forEach(function (el) {
+  var claimId = el.getAttribute('data-claim-id');
+  var timer = setInterval(function () {
+    fetch('ajax.php?action=reward-status', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ claim_id: claimId })
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (!data.ok || !data.reward) return;
+      var state = el.querySelector('.reward-state');
+      var labels = { sent: '送金済み', failed: '送金確認中', enqueue_failed: '送金待機中', queued: '送金待機中', processing: '送金処理中', pending: '送金待機中' };
+      if (state) state.textContent = labels[data.reward.status] || data.reward.status;
+      if (data.reward.status === 'sent') {
+        clearInterval(timer);
+        if (data.reward.tx_url && !el.querySelector('a')) {
+          var link = document.createElement('a'); link.href = data.reward.tx_url; link.target = '_blank'; link.rel = 'noopener'; link.textContent = 'Basescanで確認'; el.appendChild(link);
+        }
+      }
+    }).catch(function () {});
+  }, 5000);
+});
 </script>
 
 </body>

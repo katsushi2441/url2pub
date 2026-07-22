@@ -21,6 +21,31 @@ URLを1つ渡すと、**Kurageさん**がその記事を読んで考察し、告
 - `/url2pub.php` — 実際に使うツール本体(Xログイン必須。旧`index.php`から改名)
 - `/history.php` — ログインユーザー本人の配信履歴一覧
 
+## URLAI利用特典
+
+本番では、XログインとBaseウォレット接続を行い、生成と5媒体への配信試行を最後まで
+完了した利用者へ`10,000 URLAI`を1回配布する。媒体側の障害で投稿に失敗しても対象になる。
+
+- Xユーザーごとに1回
+- ウォレットごとに1回
+- 先着1,000件(総額10,000,000 URLAI)
+- WEBサーバは報酬予約だけを行い、Bankr送金は`url2pub-reward` RQDB4AIキューで実行
+- Bankr APIキーはローカルworkerだけが保持
+
+本番で`URL2PUB_REWARD_ENABLED=true`にする前に、BankrキーがWallet APIの
+`read-write`権限を持ち、Baseのガス代を支払えることを確認する。read-onlyキーでは
+`/wallet/transfer`が`403`になるため、配布表示も有効にしない。
+
+### Worker
+
+```bash
+mkdir -p ~/.config/url2pub ~/.config/systemd/user
+cp reward-worker.env.example ~/.config/url2pub/reward-worker.env
+cp systemd/url2pub-reward-worker.service ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now url2pub-reward-worker.service
+```
+
 ## デプロイ
 
 ```bash
@@ -49,9 +74,8 @@ bash scripts/deploy.sh
 本番(https://url2ai.exbridge.jp/)はモード2で運用しており、EXBRIDGEが自前運用する
 url2brain(ローカルGemma4)に直結している。
 
-## 実測(2026-07-21)
+## 実測(2026-07-22)
 
 本番(https://url2ai.exbridge.jp/)でURL投入→解析→5媒体配信のEnd-to-Endを確認済み:
 - `https://kcbrain.exbridge.jp/kcbrain.html` を投入 → 16秒で告知文・ブログ記事を生成
-- Bluesky/AIxSNS/Kurageブログ/はてなブログの4媒体で実投稿・実確認済み
-- はてなブックマークのみ、OAuth認証情報が未設定のため失敗(既知の状態、url2brain側の課題)
+- Bluesky/はてなブックマーク/AIxSNS/Kurageブログ/はてなブログの5媒体で実投稿・実確認済み

@@ -22,43 +22,92 @@ function ajax_fail($msg) {
     exit;
 }
 
+function ajax_payload_hash($value) {
+    return hash('sha256', json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+}
+
+function ajax_require_run($run_id) {
+    if ($run_id === '' || empty($_SESSION['u2p_run']['id']) || !hash_equals((string)$_SESSION['u2p_run']['id'], (string)$run_id)) {
+        ajax_fail('配信セッションが無効です。最初からやり直してください。');
+    }
+    return $_SESSION['u2p_run'];
+}
+
+function ajax_verify_hash($run, $key, $value) {
+    if (empty($run[$key]) || !hash_equals((string)$run[$key], ajax_payload_hash($value))) {
+        ajax_fail('配信データを確認できません。最初からやり直してください。');
+    }
+}
+
 if ($action === 'analyze') {
     $url = isset($input['url']) ? trim((string)$input['url']) : '';
+    $wallet = u2p_reward_wallet(isset($input['wallet']) ? $input['wallet'] : '');
     if ($url === '' || !filter_var($url, FILTER_VALIDATE_URL)) { ajax_fail('有効なURLを入力してください。'); }
+    if (u2p_reward_enabled() && $wallet === '') { ajax_fail('Baseウォレットを接続してください。'); }
     $r = u2p_api('/analyze/url', array('url' => $url, 'depth' => 'full'));
     if ($r['status'] !== 200 || empty($r['data']['result'])) {
         ajax_fail(isset($r['data']['detail']) ? $r['data']['detail'] : '解析に失敗しました');
     }
-    echo json_encode(array('ok' => true, 'source' => $r['data']['result']), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    $run_id = bin2hex(random_bytes(16));
+    $_SESSION['u2p_run'] = array(
+        'id' => $run_id,
+        'username' => $auth['session_user'],
+        'wallet' => $wallet,
+        'url' => $url,
+        'source_hash' => ajax_payload_hash($r['data']['result']),
+        'stages' => array('analyze' => date('c')),
+        'created_at' => date('c'),
+    );
+    echo json_encode(array('ok' => true, 'source' => $r['data']['result'], 'run_id' => $run_id), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
 }
 
 if ($action === 'announcement') {
+    $run_id = isset($input['run_id']) ? (string)$input['run_id'] : '';
+    $run = ajax_require_run($run_id);
     if (empty($input['source'])) { ajax_fail('source is required'); }
+    ajax_verify_hash($run, 'source_hash', $input['source']);
     $r = u2p_api('/generate/announcement', array('source' => $input['source'], 'language' => 'ja', 'tone' => 'neutral'));
     if ($r['status'] !== 200 || empty($r['data']['result'])) {
         ajax_fail(isset($r['data']['detail']) ? $r['data']['detail'] : '告知文の生成に失敗しました');
     }
+    $_SESSION['u2p_run']['announcement_hash'] = ajax_payload_hash($r['data']['result']);
+    $_SESSION['u2p_run']['stages']['announcement'] = date('c');
     echo json_encode(array('ok' => true, 'announcement' => $r['data']['result']), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
 }
 
 if ($action === 'blog') {
+    $run_id = isset($input['run_id']) ? (string)$input['run_id'] : '';
+    $run = ajax_require_run($run_id);
     if (empty($input['source'])) { ajax_fail('source is required'); }
+    ajax_verify_hash($run, 'source_hash', $input['source']);
+    if (empty($run['stages']['announcement'])) { ajax_fail('告知文の生成が完了していません'); }
     $r = u2p_api('/generate/blog-article', array('source' => $input['source'], 'language' => 'ja', 'tone' => 'neutral'));
     if ($r['status'] !== 200 || empty($r['data']['result'])) {
         ajax_fail(isset($r['data']['detail']) ? $r['data']['detail'] : 'ブログ記事の生成に失敗しました');
     }
+    $_SESSION['u2p_run']['blog_hash'] = ajax_payload_hash($r['data']['result']);
+    $_SESSION['u2p_run']['stages']['blog'] = date('c');
     echo json_encode(array('ok' => true, 'blog' => $r['data']['result']), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
 }
 
 if ($action === 'post') {
+    $run_id = isset($input['run_id']) ? (string)$input['run_id'] : '';
+    $run = ajax_require_run($run_id);
     $platform = isset($_GET['platform']) ? $_GET['platform'] : '';
     $announcement = isset($input['announcement']) ? $input['announcement'] : array('text' => '');
     $blog = isset($input['blog']) ? $input['blog'] : array('title' => '', 'body_markdown' => '');
     $source = isset($input['source']) ? $input['source'] : array('url' => '');
     $text = isset($announcement['text']) ? $announcement['text'] : '';
+    $allowed_platforms = array('bluesky', 'hatena-bookmark', 'aixsns', 'bludit', 'hatena-blog');
+    if (!in_array($platform, $allowed_platforms, true)) { ajax_fail('unknown platform: ' . $platform); }
+    ajax_verify_hash($run, 'source_hash', $source);
+    ajax_verify_hash($run, 'announcement_hash', $announcement);
+    ajax_verify_hash($run, 'blog_hash', $blog);
+    // 媒体障害は利用者の責任ではないため、成功ではなく「試行」を報酬条件にする。
+    $_SESSION['u2p_run']['stages']['post-' . $platform] = date('c');
 
     // 重複コンテンツ対策+媒体ごとの人格分け(LLM再生成なし・決定的な枠付け、2026-07-21方針):
     // Bluesky/Kurageブログ = Kurageペルソナ、AIxSNS/はてなブログ = bittensormanペルソナ。
@@ -84,27 +133,72 @@ if ($action === 'post') {
 }
 
 if ($action === 'finish') {
-    // JS側で組み立てた最終結果を受け取り、session(共有画面用)と履歴(ユーザーごと)に保存する。
+    $run_id = isset($input['run_id']) ? (string)$input['run_id'] : '';
+    $run = ajax_require_run($run_id);
+    if (!empty($run['finished_history_id'])) {
+        $claim = !empty($run['reward_claim_id']) ? u2p_reward_find($run['reward_claim_id']) : null;
+        echo json_encode(array('ok' => true, 'id' => $run['finished_history_id'], 'reward' => u2p_reward_public($claim)), JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    // JS側の最終結果に加え、同じsessionで全工程が実行されたことを検証して保存する。
     if (empty($input['source']) || empty($input['announcement']) || empty($input['blog'])) {
         ajax_fail('incomplete result');
     }
+    ajax_verify_hash($run, 'source_hash', $input['source']);
+    ajax_verify_hash($run, 'announcement_hash', $input['announcement']);
+    ajax_verify_hash($run, 'blog_hash', $input['blog']);
+    foreach (array('bluesky', 'hatena-bookmark', 'aixsns', 'bludit', 'hatena-blog') as $required_platform) {
+        if (empty($run['stages']['post-' . $required_platform])) { ajax_fail($required_platform . 'への配信が未試行です'); }
+    }
     $posted = isset($input['posted']) ? $input['posted'] : array();
+    $history_id = u2p_history_new_id();
+    $reward_result = array('ok' => true, 'eligible' => false, 'status' => 'disabled', 'message' => '利用特典は現在停止中です');
+    if (u2p_reward_enabled()) {
+        $reward_result = u2p_reward_reserve($auth['session_user'], $run['wallet'], $history_id);
+    }
     $record = array(
-        'id' => u2p_history_new_id(),
+        'id' => $history_id,
         'created_at' => date('c'),
         'source' => $input['source'],
         'announcement' => $input['announcement'],
         'blog' => $input['blog'],
         'posted' => $posted,
+        'reward_claim_id' => !empty($reward_result['claim']['id']) ? $reward_result['claim']['id'] : '',
+        'reward_status' => isset($reward_result['status']) ? $reward_result['status'] : '',
     );
     u2p_history_save($auth['session_user'], $record);
+
+    if (!empty($reward_result['eligible']) && !empty($reward_result['claim'])) {
+        $queued = u2p_reward_enqueue($reward_result['claim']);
+        if (empty($queued['ok'])) {
+            u2p_reward_update($reward_result['claim']['id'], array('status' => 'enqueue_failed', 'message' => $queued['error']), array('pending'));
+        }
+        $reward_result['claim'] = u2p_reward_find($reward_result['claim']['id']);
+    }
 
     $_SESSION['pending_result'] = array(
         'source' => $input['source'], 'announcement' => $input['announcement'],
         'blog' => $input['blog'], 'posted' => $posted, 'history_id' => $record['id'],
+        'reward_claim_id' => $record['reward_claim_id'], 'reward_status' => $record['reward_status'],
     );
+    $_SESSION['u2p_run']['finished_history_id'] = $record['id'];
+    $_SESSION['u2p_run']['reward_claim_id'] = $record['reward_claim_id'];
     unset($_SESSION['shared_confirmed']);
-    echo json_encode(array('ok' => true, 'id' => $record['id']), JSON_UNESCAPED_UNICODE);
+    $public_reward = !empty($reward_result['claim']) ? u2p_reward_public($reward_result['claim']) : array(
+        'status' => isset($reward_result['status']) ? $reward_result['status'] : 'unavailable',
+        'message' => isset($reward_result['message']) ? $reward_result['message'] : '',
+    );
+    echo json_encode(array('ok' => true, 'id' => $record['id'], 'reward' => $public_reward), JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+if ($action === 'reward-status') {
+    $claim_id = isset($input['claim_id']) ? (string)$input['claim_id'] : '';
+    $claim = u2p_reward_find($claim_id);
+    if (!$claim || u2p_reward_user($claim['username']) !== u2p_reward_user($auth['session_user'])) {
+        ajax_fail('報酬申請を確認できません');
+    }
+    echo json_encode(array('ok' => true, 'reward' => u2p_reward_public($claim)), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     exit;
 }
 

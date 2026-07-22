@@ -153,3 +153,160 @@ function u2p_history_all_users($limit = 200) {
     usort($all, function ($a, $b) { return strcmp($b['created_at'], $a['created_at']); });
     return array_slice($all, 0, $limit);
 }
+
+// --- URLAI利用特典 ---
+
+define('U2P_REWARD_LEDGER', __DIR__ . '/storage/rewards.json');
+
+function u2p_reward_enabled() {
+    return defined('URL2PUB_REWARD_ENABLED') && URL2PUB_REWARD_ENABLED;
+}
+
+function u2p_reward_wallet($value) {
+    $wallet = strtolower(trim((string)$value));
+    return preg_match('/^0x[a-f0-9]{40}$/', $wallet) ? $wallet : '';
+}
+
+function u2p_reward_user($value) {
+    return strtolower(ltrim(trim((string)$value), '@'));
+}
+
+function u2p_reward_with_ledger($callback) {
+    $dir = dirname(U2P_REWARD_LEDGER);
+    if (!is_dir($dir)) { mkdir($dir, 0775, true); }
+    $fp = fopen(U2P_REWARD_LEDGER, 'c+');
+    if ($fp === false || !flock($fp, LOCK_EX)) {
+        if ($fp !== false) { fclose($fp); }
+        throw new RuntimeException('報酬台帳を開けません');
+    }
+    rewind($fp);
+    $raw = stream_get_contents($fp);
+    $data = json_decode($raw, true);
+    if (!is_array($data)) { $data = array('version' => 1, 'claims' => array()); }
+    if (!isset($data['claims']) || !is_array($data['claims'])) { $data['claims'] = array(); }
+    $result = call_user_func_array($callback, array(&$data));
+    rewind($fp);
+    ftruncate($fp, 0);
+    fwrite($fp, json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT));
+    fflush($fp);
+    flock($fp, LOCK_UN);
+    fclose($fp);
+    return $result;
+}
+
+function u2p_reward_reserve($username, $wallet, $history_id) {
+    $user_key = u2p_reward_user($username);
+    $wallet_key = u2p_reward_wallet($wallet);
+    if ($user_key === '' || $wallet_key === '') {
+        return array('ok' => false, 'status' => 'invalid_wallet', 'message' => 'Baseウォレットを確認できません');
+    }
+    return u2p_reward_with_ledger(function (&$data) use ($username, $user_key, $wallet_key, $history_id) {
+        foreach ($data['claims'] as $claim) {
+            if (isset($claim['user_key']) && $claim['user_key'] === $user_key) {
+                return array('ok' => true, 'eligible' => false, 'status' => 'already_claimed', 'claim' => $claim, 'message' => 'このXアカウントは利用特典を申請済みです');
+            }
+            if (isset($claim['wallet']) && strtolower($claim['wallet']) === $wallet_key) {
+                return array('ok' => true, 'eligible' => false, 'status' => 'already_claimed', 'message' => 'このウォレットは利用特典を申請済みです');
+            }
+        }
+        $limit = defined('URL2PUB_REWARD_LIMIT') ? (int)URL2PUB_REWARD_LIMIT : 1000;
+        if (count($data['claims']) >= $limit) {
+            return array('ok' => true, 'eligible' => false, 'status' => 'closed', 'message' => 'URLAI利用特典は上限に達しました');
+        }
+        $claim = array(
+            'id' => 'urlai-' . date('YmdHis') . '-' . bin2hex(random_bytes(4)),
+            'username' => (string)$username,
+            'user_key' => $user_key,
+            'wallet' => $wallet_key,
+            'history_id' => (string)$history_id,
+            'amount' => defined('URL2PUB_REWARD_AMOUNT') ? (string)URL2PUB_REWARD_AMOUNT : '10000',
+            'status' => 'pending',
+            'attempts' => 0,
+            'created_at' => date('c'),
+            'updated_at' => date('c'),
+        );
+        $data['claims'][] = $claim;
+        return array('ok' => true, 'eligible' => true, 'status' => 'pending', 'claim' => $claim, 'remaining' => $limit - count($data['claims']));
+    });
+}
+
+function u2p_reward_find($claim_id) {
+    if (!file_exists(U2P_REWARD_LEDGER)) { return null; }
+    $data = json_decode(file_get_contents(U2P_REWARD_LEDGER), true);
+    if (!is_array($data) || empty($data['claims'])) { return null; }
+    foreach ($data['claims'] as $claim) {
+        if (isset($claim['id']) && hash_equals((string)$claim['id'], (string)$claim_id)) { return $claim; }
+    }
+    return null;
+}
+
+function u2p_reward_update($claim_id, $changes, $allowed_statuses = null) {
+    return u2p_reward_with_ledger(function (&$data) use ($claim_id, $changes, $allowed_statuses) {
+        foreach ($data['claims'] as &$claim) {
+            if (!isset($claim['id']) || !hash_equals((string)$claim['id'], (string)$claim_id)) { continue; }
+            if (is_array($allowed_statuses) && !in_array(isset($claim['status']) ? $claim['status'] : '', $allowed_statuses, true)) {
+                return array('ok' => false, 'claim' => $claim, 'message' => 'status conflict');
+            }
+            foreach ($changes as $key => $value) { $claim[$key] = $value; }
+            $claim['updated_at'] = date('c');
+            return array('ok' => true, 'claim' => $claim);
+        }
+        return array('ok' => false, 'message' => 'claim not found');
+    });
+}
+
+function u2p_reward_public($claim) {
+    if (!is_array($claim)) { return null; }
+    $wallet = isset($claim['wallet']) ? $claim['wallet'] : '';
+    return array(
+        'id' => isset($claim['id']) ? $claim['id'] : '',
+        'amount' => isset($claim['amount']) ? $claim['amount'] : '10000',
+        'status' => isset($claim['status']) ? $claim['status'] : 'pending',
+        'wallet' => strlen($wallet) === 42 ? substr($wallet, 0, 6) . '...' . substr($wallet, -4) : '',
+        'tx_hash' => isset($claim['tx_hash']) ? $claim['tx_hash'] : '',
+        'tx_url' => !empty($claim['tx_hash']) ? 'https://basescan.org/tx/' . rawurlencode($claim['tx_hash']) : '',
+        'message' => isset($claim['message']) ? $claim['message'] : '',
+    );
+}
+
+function u2p_reward_enqueue($claim) {
+    if (!defined('RQDB4AI_API_BASE') || !defined('RQDB4AI_OPERATE_TOKEN') || RQDB4AI_OPERATE_TOKEN === '') {
+        return array('ok' => false, 'error' => '報酬キューが未設定です');
+    }
+    $payload = array(
+        'queue' => defined('URL2PUB_REWARD_QUEUE') ? URL2PUB_REWARD_QUEUE : 'url2pub-reward',
+        'function' => defined('URL2PUB_REWARD_FUNCTION') ? URL2PUB_REWARD_FUNCTION : 'url2pub_reward_jobs.send_urlai_reward',
+        'kwargs' => array(
+            'claim_id' => $claim['id'],
+            'username' => $claim['username'],
+            'wallet' => $claim['wallet'],
+            'history_id' => $claim['history_id'],
+            'amount' => $claim['amount'],
+        ),
+        'meta' => array(
+            'project' => 'url2pub', 'kind' => 'urlai_reward', 'source' => 'web',
+            'description' => 'URL2Pub利用特典 ' . $claim['amount'] . ' URLAI -> ' . substr($claim['wallet'], 0, 8) . '...',
+        ),
+        'timeout' => 180,
+        'result_ttl' => 2592000,
+        'failure_ttl' => 2592000,
+    );
+    $ch = curl_init(rtrim(RQDB4AI_API_BASE, '/') . '/api/enqueue');
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 8);
+    curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization: Bearer ' . RQDB4AI_OPERATE_TOKEN, 'Content-Type: application/json'));
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    $body = curl_exec($ch);
+    $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $error = curl_error($ch);
+    curl_close($ch);
+    $decoded = json_decode($body, true);
+    if ($status !== 200 || !is_array($decoded) || empty($decoded['ok'])) {
+        return array('ok' => false, 'error' => $error !== '' ? $error : 'RQDB4AI enqueue failed (' . $status . ')');
+    }
+    $job_id = isset($decoded['job']['id']) ? $decoded['job']['id'] : '';
+    u2p_reward_update($claim['id'], array('status' => 'queued', 'job_id' => $job_id), array('pending', 'enqueue_failed', 'failed'));
+    return array('ok' => true, 'job_id' => $job_id);
+}

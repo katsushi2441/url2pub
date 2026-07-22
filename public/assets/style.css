@@ -119,6 +119,30 @@ label { font-size: 13px; font-weight: 700; color: var(--teal-deep); display: blo
 .btn-ghost:hover { border-color: var(--teal); background: var(--panel); }
 .btn-sm { padding: 8px 16px; font-size: 12.5px; }
 
+.reward-banner {
+  display: grid; grid-template-columns: 190px 1fr; gap: 18px; align-items: center;
+  border: 1px solid #e6d5a7; background: linear-gradient(120deg, #fffdf3, #eefbf8);
+  border-radius: 14px; padding: 16px 18px; margin-bottom: 18px; color: #263844;
+}
+.reward-banner > div { display: flex; flex-direction: column; }
+.reward-banner strong { color: #9a6b00; font-size: 22px; line-height: 1.25; }
+.reward-banner p { font-size: 13px; line-height: 1.65; }
+.reward-kicker { color: #80621d; font-size: 10px; font-weight: 700; letter-spacing: .12em; }
+.wallet-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.wallet-row .btn { padding: 10px 18px; font-size: 13px; }
+#u2pWalletState { color: var(--abyss-soft); font-size: 12.5px; font-family: ui-monospace, monospace; }
+.reward-status {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px; border: 1px solid #e6d5a7;
+  border-radius: 14px; padding: 13px 16px; margin-bottom: 18px;
+  background: linear-gradient(120deg, #fffdf3, var(--panel)); font-size: 13px;
+}
+.reward-status strong { color: #80621d; }
+.reward-status small { color: var(--abyss-soft); font-family: ui-monospace, monospace; }
+.reward-state {
+  color: var(--up); background: color-mix(in srgb, var(--up) 12%, transparent);
+  border-radius: 999px; padding: 3px 10px; font-weight: 700;
+}
+
 .error {
   background: color-mix(in srgb, var(--down) 12%, var(--foam));
   color: var(--down); border: 1px solid color-mix(in srgb, var(--down) 30%, transparent);
@@ -179,4 +203,6 @@ footer.site a { font-weight: 700; }
   header.site { padding-top: 32px; }
   .hbrand h1 { font-size: 21px; }
   .card { padding: 20px; }
+  .reward-banner { grid-template-columns: 1fr; gap: 8px; }
+  .wallet-row { align-items: flex-start; flex-direction: column; }
 }

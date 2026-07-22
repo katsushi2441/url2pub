@@ -1,0 +1,17 @@
+[Unit]
+Description=URL2Pub URLAI reward RQDB4AI worker
+After=default.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/kojima/work/url2pub
+Environment=PYTHONUNBUFFERED=1
+Environment=PYTHONPATH=/home/kojima/work/url2pub:/home/kojima/work/rqdb4ai:/home/kojima/.local/lib/python3.11/site-packages:/home/kojima/.local/lib/python3.10/site-packages
+EnvironmentFile=/home/kojima/.config/url2pub/reward-worker.env
+ExecStart=/home/kojima/.local/bin/rq worker url2pub-reward --url redis://127.0.0.1:6379/0
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target
+
