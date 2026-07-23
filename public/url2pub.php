@@ -81,6 +81,10 @@ $T_ALL = array(
   'flow1' => 'URLAIを受け取る', 'flow2' => '使って支払う／売る', 'flow3' => '欲しい人が買う', 'flow4' => '経済が回る',
   'econ_em' => 'いまはその仕組みを検証する<b>テスト期間</b>。<b>あなたの協力が、この経済の最初の一歩</b>になります。',
   'econ_cta' => '𝕏 でログインして始める',
+  'reach_kicker' => '5媒体の外へ',
+  'reach_title' => '自動配信の5媒体に加えて、<em>𝕏 と YouTube</em> へ広がることもあります。',
+  'reach_x' => '<b>𝕏（手動）:</b> Xへの自動投稿は誤爆リスクがあるため行っていませんが、内容を確認したうえで手動で告知することがあります。ご希望の方は <a href="https://x.com/xb_bittensor" target="_blank" rel="noopener">@xb_bittensor</a> をフォローしてコメントをください。確認後に、そのURLの告知を投稿します。',
+  'reach_yt' => '<b>YouTube・考察ショート動画:</b> 質の高いコンテンツは、<a href="https://kurage.exbridge.jp/kmontage.php" target="_blank" rel="noopener">kmontage.php</a> で考察系のショート動画を生成し、<a href="https://kurage.exbridge.jp/kuragev.php" target="_blank" rel="noopener">kuragev.php</a> や YouTubeチャンネル <a href="https://www.youtube.com/@xb-bittensor" target="_blank" rel="noopener">@xb-bittensor</a> で配信することもあります。',
   'intro' => 'URLを1つ渡すだけで、<b>Kurageさん</b>がその記事を解析して考察し、告知文とブログ記事を書き上げ、<b>株式会社エクスブリッジ</b>が運営する5つのメディアへ自動で配信します。',
   'reward_banner_desc' => '先着1,000人・XアカウントとBaseウォレットにつき1回。5媒体への配信は、媒体側で失敗しても特典対象です。',
   'form_label' => '配信したいページのURL',
@@ -178,6 +182,10 @@ $T_ALL = array(
   'flow1' => 'Receive URLAI', 'flow2' => 'Use to pay / sell', 'flow3' => 'Others buy it', 'flow4' => 'The economy circulates',
   'econ_em' => 'Right now is the <b>test period</b> to validate this mechanism. <b>Your help is the first step of this economy.</b>',
   'econ_cta' => 'Sign in with 𝕏 to start',
+  'reach_kicker' => 'Beyond the 5 media',
+  'reach_title' => 'Beyond the 5 auto-publish channels, it can also reach <em>𝕏 and YouTube</em>.',
+  'reach_x' => '<b>𝕏 (manual):</b> We do not auto-post to X because of the risk, but we do post announcements manually after review. If you would like that, follow <a href="https://x.com/xb_bittensor" target="_blank" rel="noopener">@xb_bittensor</a> and leave a comment — after we confirm it, we will post an announcement for your URL.',
+  'reach_yt' => '<b>YouTube · analysis shorts:</b> For high-quality content, we may generate an analysis short video with <a href="https://kurage.exbridge.jp/kmontage.php" target="_blank" rel="noopener">kmontage.php</a> and distribute it on <a href="https://kurage.exbridge.jp/kuragev.php" target="_blank" rel="noopener">kuragev.php</a> and our YouTube channel <a href="https://www.youtube.com/@xb-bittensor" target="_blank" rel="noopener">@xb-bittensor</a>.',
   'intro' => 'Just hand over one URL and <b>Kurage</b> analyzes the article, writes an announcement and a blog post, and auto-publishes to 5 media run by <b>EXBRIDGE, Inc.</b>',
   'reward_banner_desc' => 'First 1,000 people, once per X account and Base wallet. You qualify even if some of the 5 media fail on their side.',
   'form_label' => 'URL of the page to publish',
@@ -402,6 +410,13 @@ $reward_processing_label = $lang === 'en' ? 'Processing' : '送金処理中';
         <span><?php echo u2p_h($m['label']); ?><?php echo $m['note'] !== '' ? ' — ' . u2p_h($m['note']) : ''; ?></span>
       <?php endforeach; ?>
     </div>
+  </section>
+
+  <section class="lp-band lp-reach">
+    <span class="lp-band-kicker"><?php echo u2p_h($T['reach_kicker']); ?></span>
+    <h3 class="lp-band-title"><?php echo $T['reach_title']; ?></h3>
+    <p class="lp-band-text"><?php echo $T['reach_x']; ?></p>
+    <p class="lp-band-text"><?php echo $T['reach_yt']; ?></p>
   </section>
 
   <section class="lp-band lp-flywheel">
