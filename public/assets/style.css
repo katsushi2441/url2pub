@@ -285,7 +285,7 @@ footer.site a { font-weight: 700; }
 
 .lp-steps { margin-top: 30px; text-align: center; }
 .lp-steps-title { font-family: "Zen Maru Gothic", sans-serif; font-weight: 700; font-size: clamp(20px, 3.4vw, 26px); color: var(--abyss); }
-.lp-steps-list { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 22px 0 0; padding: 0; }
+.lp-steps-list { list-style: none; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 16px; margin: 22px 0 0; padding: 0; }
 .lp-steps-list li { background: var(--foam); border: 1px solid var(--panel-line); border-radius: 18px; padding: 26px 18px; box-shadow: var(--shadow); }
 .lp-step-n {
   display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px;

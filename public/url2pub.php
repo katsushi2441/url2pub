@@ -46,7 +46,7 @@ $T_ALL = array(
   'm_hatena_blog' => 'はてなブログ',
   'lp_eyebrow' => 'Kurageを一緒に育てる ・ URLAI テスト期間',
   'lp_title' => 'Kurageを広める人が、<br>Kurageと一緒に<em>育つ</em>。',
-  'lp_lead' => 'URLを1つ渡すだけ。<b>Kurageさん</b>がその記事を読んで考察し、告知文とブログ記事を書き上げ、<b>5つのメディアへ自動で配信</b>します。＝あなたが <b>Kurageを世に広げる</b>ということ。広めてくれたあなたへ、感謝を込めて <b>URLAIトークン</b>をお渡しします。',
+  'lp_lead' => 'URLを1つ渡すだけ。<b>Kurageさん</b>がその記事を読んで考察し、告知文とブログ記事を書き上げ、<b>5つのメディアへ自動で配信</b>。さらに<b>あなた自身もXでシェア</b>すれば、その一言が <b>Kurageを世界へ広げる拡散の力</b>になります。広めてくれたあなたへ、感謝を込めて <b>URLAIトークン</b>をお渡しします。',
   'lp_token_kicker' => 'いま協力してくれた方へ',
   'lp_token_sub' => '1回の配信を最後まで完了で配布 ／ 先着1,000人 ・ Xとウォレットにつき1回 ・ <b>無料</b>',
   'lp_token_soon_kicker' => 'URLAI 配布',
@@ -56,7 +56,7 @@ $T_ALL = array(
   'lp_cta_note' => 'Xログイン＋Baseウォレット接続だけ。費用はかかりません。',
   'fw_kicker' => 'これが、経済が回る仕組み',
   'fw_title' => 'あなたの拡散が、<em>Kurageの実需</em>に変わる。',
-  'fw1_b' => 'あなたが広める', 'fw1_s' => 'url2pubで5媒体へ配信',
+  'fw1_b' => 'あなたが広める', 'fw1_s' => 'url2pubで5媒体へ配信＋Xでシェア',
   'fw2_b' => 'Kurageの知名度が上がる',
   'fw3_b' => '有料サービスの利用者が増える', 'fw3_s' => 'kfreqai・kcbrain・kfxbrain…',
   'fw4_b' => '利益が生まれる',
@@ -70,10 +70,11 @@ $T_ALL = array(
   'philo_kicker' => '思想 — inspired by Bittensor',
   'philo_title' => 'あなたは“利用者”ではなく、<em>共に育てる人</em>。',
   'philo_text' => '私たちは <b>Bittensor</b> の考え方を支持しています。AIが生み出す価値を運営が独り占めするのではなく、使い・広め・支えてくれた人へ <b>トークンで還元する</b>。それが URLAI です。あなたの1回が、この分配ネットワークの一部になります。',
-  'steps_title' => '3ステップ、数分で完了',
+  'steps_title' => '使って、Xでシェアして、Kurageを広める',
   'step1_b' => 'Xでログイン', 'step1_s' => 'Baseウォレットを接続します。',
   'step2_b' => 'URLを1つ入力', 'step2_s' => 'Kurageさんが読んで告知文とブログを執筆。',
-  'step3_b' => '5媒体へ自動配信', 'step3_s' => '完了したあなたへ URLAI を配布。',
+  'step3_b' => 'Kurageが5媒体へ自動配信', 'step3_s' => 'Bluesky・はてな・AIxSNS等へKurageさんが投稿。',
+  'step4_b' => 'あなたもXでシェア', 'step4_s' => 'その一言の拡散がKurageの力に。完了であなたへURLAIを配布。',
   'econ_kicker' => 'テスト完了後の姿',
   'econ_title' => '1回のご利用は <em>200円</em>、または <em>20,000 URLAI</em>。',
   'econ_text' => 'テストが終わったら、1回のご利用を <b>200円でも、20,000 URLAIでも</b>お支払いいただける<b>選択制</b>になります。テスト期間に受け取ったURLAIは、そのまま利用料としてお使いいただけます。使わずに持ち続ける人は、<b>Kurageが育てば、その上振れを分かち合う</b>——約束ではなく、早く支えてくれた人への“取り分”として。',
@@ -142,7 +143,7 @@ $T_ALL = array(
   'm_hatena_blog' => 'Hatena Blog',
   'lp_eyebrow' => 'Grow Kurage together ・ URLAI test period',
   'lp_title' => 'Those who spread Kurage<br>grow <em>together with</em> Kurage.',
-  'lp_lead' => 'Just hand over one URL. <b>Kurage</b> reads the article, writes an announcement and a blog post, and <b>auto-publishes to 5 media</b>. That means <b>you spread Kurage to the world</b>. As a thank-you, we hand you <b>URLAI tokens</b>.',
+  'lp_lead' => 'Just hand over one URL. <b>Kurage</b> reads the article, writes an announcement and a blog post, and <b>auto-publishes to 5 media</b>. And when <b>you share it on X too</b>, that one post becomes <b>the reach that spreads Kurage to the world</b>. As a thank-you, we hand you <b>URLAI tokens</b>.',
   'lp_token_kicker' => 'For those who help now',
   'lp_token_sub' => 'Granted when you complete one full run ／ First 1,000 people ・ Once per X account and wallet ・ <b>Free</b>',
   'lp_token_soon_kicker' => 'URLAI distribution',
@@ -152,7 +153,7 @@ $T_ALL = array(
   'lp_cta_note' => 'Just sign in with X and connect a Base wallet. It is free.',
   'fw_kicker' => 'How the economy comes full circle',
   'fw_title' => 'Your reach turns into <em>real demand for Kurage</em>.',
-  'fw1_b' => 'You spread it', 'fw1_s' => 'Publish to 5 media via url2pub',
+  'fw1_b' => 'You spread it', 'fw1_s' => 'Publish to 5 media + share on X',
   'fw2_b' => 'Kurage gets known',
   'fw3_b' => 'Paid services gain users', 'fw3_s' => 'kfreqai・kcbrain・kfxbrain…',
   'fw4_b' => 'Revenue is created',
@@ -166,10 +167,11 @@ $T_ALL = array(
   'philo_kicker' => 'Philosophy — inspired by Bittensor',
   'philo_title' => 'You are not a “user,” but <em>someone who grows it with us</em>.',
   'philo_text' => 'We support the ideas of <b>Bittensor</b>. Instead of the operator monopolizing the value AI creates, we <b>return it in tokens</b> to those who use, spread, and support it. That is URLAI. Your single run becomes part of this distribution network.',
-  'steps_title' => 'Three steps, done in minutes',
+  'steps_title' => 'Use it, share it on X, spread Kurage',
   'step1_b' => 'Sign in with X', 'step1_s' => 'Connect a Base wallet.',
   'step2_b' => 'Enter one URL', 'step2_s' => 'Kurage reads it and writes the announcement and blog.',
-  'step3_b' => 'Auto-publish to 5 media', 'step3_s' => 'On completion, URLAI is granted to you.',
+  'step3_b' => 'Kurage auto-publishes to 5 media', 'step3_s' => 'Posts to Bluesky, Hatena, AIxSNS and more.',
+  'step4_b' => 'You share it on X too', 'step4_s' => 'That one share powers Kurage. URLAI is granted to you on completion.',
   'econ_kicker' => 'After the test period',
   'econ_title' => 'Each run is <em>200 JPY</em>, or <em>20,000 URLAI</em>.',
   'econ_text' => 'After the test, each run becomes payable <b>either with 200 JPY or with 20,000 URLAI</b> — <b>your choice</b>. URLAI you received during the test can be used directly as the fee. Those who keep holding it <b>share in the upside if Kurage grows</b> — not a promise, but a “stake” for those who supported it early.',
@@ -445,6 +447,7 @@ $reward_processing_label = $lang === 'en' ? 'Processing' : '送金処理中';
       <li><span class="lp-step-n">1</span><b><?php echo u2p_h($T['step1_b']); ?></b><small><?php echo u2p_h($T['step1_s']); ?></small></li>
       <li><span class="lp-step-n">2</span><b><?php echo u2p_h($T['step2_b']); ?></b><small><?php echo u2p_h($T['step2_s']); ?></small></li>
       <li><span class="lp-step-n">3</span><b><?php echo u2p_h($T['step3_b']); ?></b><small><?php echo u2p_h($T['step3_s']); ?></small></li>
+      <li><span class="lp-step-n">4</span><b><?php echo u2p_h($T['step4_b']); ?></b><small><?php echo u2p_h($T['step4_s']); ?></small></li>
     </ol>
   </section>
 
