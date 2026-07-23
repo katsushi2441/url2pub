@@ -6,10 +6,14 @@ require_once __DIR__ . '/auth_common.php';
 require_once __DIR__ . '/lib.php';
 header('Content-Type: application/json; charset=utf-8');
 
+// 出力言語: url2pub.php が設定する Cookie u2p_lang に従う（en/ja）。生成物とエラー文言に反映。
+$u2p_lang = (isset($_COOKIE['u2p_lang']) && $_COOKIE['u2p_lang'] === 'en') ? 'en' : 'ja';
+function am($ja, $en) { global $u2p_lang; return $u2p_lang === 'en' ? $en : $ja; }
+
 $auth = url2ai_auth_bootstrap();
 if (empty($auth['logged_in'])) {
     http_response_code(401);
-    echo json_encode(array('ok' => false, 'error' => 'ログインが必要です'), JSON_UNESCAPED_UNICODE);
+    echo json_encode(array('ok' => false, 'error' => am('ログインが必要です', 'Sign-in required')), JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -28,25 +32,25 @@ function ajax_payload_hash($value) {
 
 function ajax_require_run($run_id) {
     if ($run_id === '' || empty($_SESSION['u2p_run']['id']) || !hash_equals((string)$_SESSION['u2p_run']['id'], (string)$run_id)) {
-        ajax_fail('配信セッションが無効です。最初からやり直してください。');
+        ajax_fail(am('配信セッションが無効です。最初からやり直してください。', 'Your session is invalid. Please start over.'));
     }
     return $_SESSION['u2p_run'];
 }
 
 function ajax_verify_hash($run, $key, $value) {
     if (empty($run[$key]) || !hash_equals((string)$run[$key], ajax_payload_hash($value))) {
-        ajax_fail('配信データを確認できません。最初からやり直してください。');
+        ajax_fail(am('配信データを確認できません。最初からやり直してください。', 'Could not verify the run data. Please start over.'));
     }
 }
 
 if ($action === 'analyze') {
     $url = isset($input['url']) ? trim((string)$input['url']) : '';
     $wallet = u2p_reward_wallet(isset($input['wallet']) ? $input['wallet'] : '');
-    if ($url === '' || !filter_var($url, FILTER_VALIDATE_URL)) { ajax_fail('有効なURLを入力してください。'); }
-    if (u2p_reward_enabled() && $wallet === '') { ajax_fail('Baseウォレットを接続してください。'); }
+    if ($url === '' || !filter_var($url, FILTER_VALIDATE_URL)) { ajax_fail(am('有効なURLを入力してください。', 'Please enter a valid URL.')); }
+    if (u2p_reward_enabled() && $wallet === '') { ajax_fail(am('Baseウォレットを接続してください。', 'Please connect a Base wallet.')); }
     $r = u2p_api('/analyze/url', array('url' => $url, 'depth' => 'full'));
     if ($r['status'] !== 200 || empty($r['data']['result'])) {
-        ajax_fail(isset($r['data']['detail']) ? $r['data']['detail'] : '解析に失敗しました');
+        ajax_fail(isset($r['data']['detail']) ? $r['data']['detail'] : am('解析に失敗しました', 'Analysis failed'));
     }
     $run_id = bin2hex(random_bytes(16));
     $_SESSION['u2p_run'] = array(
@@ -54,6 +58,7 @@ if ($action === 'analyze') {
         'username' => $auth['session_user'],
         'wallet' => $wallet,
         'url' => $url,
+        'lang' => $u2p_lang,
         'source_hash' => ajax_payload_hash($r['data']['result']),
         'stages' => array('analyze' => date('c')),
         'created_at' => date('c'),
@@ -67,9 +72,9 @@ if ($action === 'announcement') {
     $run = ajax_require_run($run_id);
     if (empty($input['source'])) { ajax_fail('source is required'); }
     ajax_verify_hash($run, 'source_hash', $input['source']);
-    $r = u2p_api('/generate/announcement', array('source' => $input['source'], 'language' => 'ja', 'tone' => 'neutral'));
+    $r = u2p_api('/generate/announcement', array('source' => $input['source'], 'language' => (isset($run['lang']) ? $run['lang'] : $u2p_lang), 'tone' => 'neutral'));
     if ($r['status'] !== 200 || empty($r['data']['result'])) {
-        ajax_fail(isset($r['data']['detail']) ? $r['data']['detail'] : '告知文の生成に失敗しました');
+        ajax_fail(isset($r['data']['detail']) ? $r['data']['detail'] : am('告知文の生成に失敗しました', 'Failed to generate the announcement'));
     }
     $_SESSION['u2p_run']['announcement_hash'] = ajax_payload_hash($r['data']['result']);
     $_SESSION['u2p_run']['stages']['announcement'] = date('c');
@@ -82,10 +87,10 @@ if ($action === 'blog') {
     $run = ajax_require_run($run_id);
     if (empty($input['source'])) { ajax_fail('source is required'); }
     ajax_verify_hash($run, 'source_hash', $input['source']);
-    if (empty($run['stages']['announcement'])) { ajax_fail('告知文の生成が完了していません'); }
-    $r = u2p_api('/generate/blog-article', array('source' => $input['source'], 'language' => 'ja', 'tone' => 'neutral'));
+    if (empty($run['stages']['announcement'])) { ajax_fail(am('告知文の生成が完了していません', 'The announcement has not been generated yet')); }
+    $r = u2p_api('/generate/blog-article', array('source' => $input['source'], 'language' => (isset($run['lang']) ? $run['lang'] : $u2p_lang), 'tone' => 'neutral'));
     if ($r['status'] !== 200 || empty($r['data']['result'])) {
-        ajax_fail(isset($r['data']['detail']) ? $r['data']['detail'] : 'ブログ記事の生成に失敗しました');
+        ajax_fail(isset($r['data']['detail']) ? $r['data']['detail'] : am('ブログ記事の生成に失敗しました', 'Failed to generate the blog post'));
     }
     $_SESSION['u2p_run']['blog_hash'] = ajax_payload_hash($r['data']['result']);
     $_SESSION['u2p_run']['stages']['blog'] = date('c');
@@ -112,18 +117,19 @@ if ($action === 'post') {
     // 重複コンテンツ対策+媒体ごとの人格分け(LLM再生成なし・決定的な枠付け、2026-07-21方針):
     // Bluesky/Kurageブログ = Kurageペルソナ、AIxSNS/はてなブログ = bittensormanペルソナ。
     // はてなブックマークは短いコメントのため枠なし。
+    $run_lang = isset($run['lang']) ? $run['lang'] : $u2p_lang;
     if ($platform === 'bluesky') {
-        $result = u2p_post_bluesky(u2p_persona_frame($text, 'kurage', 'announcement'));
+        $result = u2p_post_bluesky(u2p_persona_frame($text, 'kurage', 'announcement', $run_lang));
     } elseif ($platform === 'hatena-bookmark') {
         $result = u2p_post_hatena_bookmark(isset($source['url']) ? $source['url'] : '', $text);
     } elseif ($platform === 'aixsns') {
-        $result = u2p_post_aixsns(u2p_persona_frame($text, 'bittensorman', 'announcement'));
+        $result = u2p_post_aixsns(u2p_persona_frame($text, 'bittensorman', 'announcement', $run_lang));
     } elseif ($platform === 'bludit') {
         $body = isset($blog['body_markdown']) ? $blog['body_markdown'] : '';
-        $result = u2p_post_bludit(isset($blog['title']) ? $blog['title'] : '', u2p_persona_frame($body, 'kurage', 'blog'));
+        $result = u2p_post_bludit(isset($blog['title']) ? $blog['title'] : '', u2p_persona_frame($body, 'kurage', 'blog', $run_lang));
     } elseif ($platform === 'hatena-blog') {
         $body2 = isset($blog['body_markdown']) ? $blog['body_markdown'] : '';
-        $result = u2p_post_hatena_blog(isset($blog['title']) ? $blog['title'] : '', u2p_persona_frame($body2, 'bittensorman', 'blog'));
+        $result = u2p_post_hatena_blog(isset($blog['title']) ? $blog['title'] : '', u2p_persona_frame($body2, 'bittensorman', 'blog', $run_lang));
     } else {
         ajax_fail('unknown platform: ' . $platform);
         exit;
@@ -148,7 +154,7 @@ if ($action === 'finish') {
     ajax_verify_hash($run, 'announcement_hash', $input['announcement']);
     ajax_verify_hash($run, 'blog_hash', $input['blog']);
     foreach (array('bluesky', 'hatena-bookmark', 'aixsns', 'bludit', 'hatena-blog') as $required_platform) {
-        if (empty($run['stages']['post-' . $required_platform])) { ajax_fail($required_platform . 'への配信が未試行です'); }
+        if (empty($run['stages']['post-' . $required_platform])) { ajax_fail(am($required_platform . 'への配信が未試行です', 'Publishing to ' . $required_platform . ' was not attempted')); }
     }
     $posted = isset($input['posted']) ? $input['posted'] : array();
     $history_id = u2p_history_new_id();

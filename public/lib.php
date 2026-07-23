@@ -9,17 +9,24 @@ function u2p_h($value) {
 // ペルソナ別の枠付け(LLM再生成なし、決定的なテンプレート処理)。同一文面がそのまま
 // 複数媒体に並ぶ重複コンテンツを緩和しつつ、媒体ごとにキャラクター性を出す。
 // Bluesky(announcement)は280字制限があるため枠を最小限にする。
-function u2p_persona_frame($text, $persona, $kind) {
+function u2p_persona_frame($text, $persona, $kind, $lang = 'ja') {
     $text = trim((string)$text);
+    $en = ($lang === 'en');
     if ($persona === 'kurage') {
         if ($kind === 'announcement') {
             return '🪼 ' . $text;
+        }
+        if ($en) {
+            return "🪼 Hi, I'm Kurage. Let me introduce this today.\n\n" . $text . "\n\n---\n*— Kurage*";
         }
         return "🪼 Kurageです。今日はこちらをご紹介しますね。\n\n" . $text . "\n\n---\n*— Kurage*";
     }
     if ($persona === 'bittensorman') {
         if ($kind === 'announcement') {
-            return '【開発者より】' . "\n" . $text . "\n— bittensorman";
+            return ($en ? "[From the developer]" : '【開発者より】') . "\n" . $text . "\n— bittensorman";
+        }
+        if ($en) {
+            return "From a developer & founder's perspective.\n\n" . $text . "\n\n---\n*— bittensorman (developer & founder)*";
         }
         return "開発者・経営者の視点から。\n\n" . $text . "\n\n---\n*— bittensorman（開発者・経営者）*";
     }
