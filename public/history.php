@@ -23,6 +23,23 @@ $records = u2p_history_load($auth['session_user']);
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/style.css">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-BP0650KDFR"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-BP0650KDFR');
+</script>
+<script>
+(function () {
+    var s = document.createElement('script');
+    s.src = 'https://aiknowledgecms.exbridge.jp/simpletrack.php'
+        + '?url=' + encodeURIComponent(location.href)
+        + '&ref=' + encodeURIComponent(document.referrer);
+    document.head.appendChild(s);
+})();
+</script>
 </head>
 <body>
 <header class="site"><div class="wrap">
