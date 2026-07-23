@@ -20,6 +20,20 @@ class RewardWorkerTest(unittest.TestCase):
         tx_hash = "0x" + "a" * 64
         self.assertEqual(jobs._find_tx_hash({"result": {"transactionHash": tx_hash}}), tx_hash)
 
+    def test_builds_current_bankr_transfer_payload(self):
+        wallet = "0x" + "1" * 40
+
+        self.assertEqual(
+            jobs._bankr_transfer_payload(wallet, "10000"),
+            {
+                "tokenAddress": jobs.TOKEN_CONTRACT,
+                "recipientAddress": wallet,
+                "amount": "10000",
+                "isNativeToken": False,
+                "chain": "base",
+            },
+        )
+
     def test_sends_once_and_returns_local_result_on_retry(self):
         tx_hash = "0x" + "b" * 64
         claim = {

@@ -94,8 +94,18 @@ def _find_tx_hash(value: Any) -> str:
     return ""
 
 
+def _bankr_transfer_payload(wallet: str, amount: str) -> dict[str, Any]:
+    return {
+        "tokenAddress": TOKEN_CONTRACT,
+        "recipientAddress": wallet,
+        "amount": amount,
+        "isNativeToken": False,
+        "chain": "base",
+    }
+
+
 def _bankr_transfer(wallet: str, amount: str, claim_id: str) -> tuple[str, dict[str, Any]]:
-    payload = {"to": wallet, "token": TOKEN_CONTRACT, "amount": amount, "chain": "base"}
+    payload = _bankr_transfer_payload(wallet, amount)
     request = urllib.request.Request(
         f"{BANKR_API_BASE}/wallet/transfer",
         data=json.dumps(payload).encode("utf-8"),
