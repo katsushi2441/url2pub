@@ -74,6 +74,16 @@ header.site {
 .whoami strong { color: var(--abyss); }
 .whoami a { font-weight: 700; }
 
+.topright { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.langswitch { display: inline-flex; gap: 5px; }
+.langswitch a {
+  padding: 3px 11px; border-radius: 999px; border: 1px solid var(--panel-line);
+  color: var(--abyss-soft); font-size: 12px; font-weight: 700; text-decoration: none;
+}
+.langswitch a.on { background: var(--teal-deep); color: #fff; border-color: var(--teal-deep); }
+.langswitch a:hover { border-color: var(--teal); color: var(--teal-deep); }
+.langswitch a.on:hover { color: #fff; }
+
 main { padding: 10px 0 60px; }
 
 .intro {
