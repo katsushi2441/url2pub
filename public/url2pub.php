@@ -141,23 +141,111 @@ $share_url = 'https://url2ai.exbridge.jp/';
 <main><div class="wrap">
 
 <?php if ($view === 'login'): ?>
-  <div class="intro">
-    URLを1つ渡すだけで、<b>Kurageさん</b>がその記事を解析して考察し、告知文とブログ記事を書き上げ、
-    <b>株式会社エクスブリッジ</b>が運営する5つのメディアへ自動で配信します。
-    <div class="media">
+  <section class="lp-hero">
+    <span class="lp-eyebrow">Kurageを一緒に育てる ・ URLAI テスト期間</span>
+    <h2 class="lp-title">Kurageを広める人が、<br>Kurageと一緒に<em>育つ</em>。</h2>
+    <p class="lp-lead">
+      URLを1つ渡すだけ。<b>Kurageさん</b>がその記事を読んで考察し、告知文とブログ記事を書き上げ、
+      <b>5つのメディアへ自動で配信</b>します。＝あなたが <b>Kurageを世に広げる</b>ということ。
+      広めてくれたあなたへ、感謝を込めて <b>URLAIトークン</b>をお渡しします。
+    </p>
+
+    <?php if (u2p_reward_enabled()): ?>
+      <div class="lp-token">
+        <span class="lp-token-kicker">いま協力してくれた方へ</span>
+        <strong class="lp-token-amt">10,000<span class="lp-token-unit">URLAI</span></strong>
+        <span class="lp-token-sub">1回の配信を最後まで完了で配布 ／ 先着1,000人 ・ Xとウォレットにつき1回 ・ <b>無料</b></span>
+      </div>
+    <?php else: ?>
+      <div class="lp-token lp-token--soon">
+        <span class="lp-token-kicker">URLAI 配布</span>
+        <strong class="lp-token-amt">まもなく開始</strong>
+        <span class="lp-token-sub">協力してくれた方へURLAIトークンをお配りします。</span>
+      </div>
+    <?php endif; ?>
+
+    <a class="btn btn-x lp-cta" href="?login=1">𝕏 でログインして、いますぐ協力する</a>
+    <p class="lp-cta-note">Xログイン＋Baseウォレット接続だけ。費用はかかりません。</p>
+
+    <div class="media lp-media">
       <?php foreach ($MEDIA as $m): ?>
         <span><?php echo u2p_h($m['label']); ?><?php echo $m['note'] !== '' ? ' — ' . u2p_h($m['note']) : ''; ?></span>
       <?php endforeach; ?>
     </div>
-  </div>
-  <div class="card" style="text-align:center">
-    <p style="font-size:13.5px;color:var(--abyss-soft);margin-bottom:16px">
-      現在無料でご利用いただけます。<?php if (u2p_reward_enabled()): ?>先着1,000人へ、1人1回10,000 URLAIの利用特典があります。<br><?php endif; ?>
-      ご利用の条件として、配信後にXへ一言シェアをお願いしています。<br>
-      利用を始めるにはXでログインしてください。
+  </section>
+
+  <section class="lp-band lp-flywheel">
+    <span class="lp-band-kicker">これが、経済が回る仕組み</span>
+    <h3 class="lp-band-title">あなたの拡散が、<em>Kurageの実需</em>に変わる。</h3>
+    <div class="fw">
+      <div class="fw-node"><span class="fw-n">1</span><b>あなたが広める</b><small>url2pubで5媒体へ配信</small></div>
+      <i class="fw-arrow">→</i>
+      <div class="fw-node"><span class="fw-n">2</span><b>Kurageの知名度が上がる</b></div>
+      <i class="fw-arrow">→</i>
+      <div class="fw-node"><span class="fw-n">3</span><b>有料サービスの利用者が増える</b><small>kfreqai・kcbrain・kfxbrain…</small></div>
+      <i class="fw-arrow">→</i>
+      <div class="fw-node"><span class="fw-n">4</span><b>利益が生まれる</b></div>
+      <i class="fw-arrow">→</i>
+      <div class="fw-node fw-node--gold"><span class="fw-n">5</span><b>URLAI と貢献者へ還元</b></div>
+      <i class="fw-arrow fw-arrow--loop">↻</i>
+    </div>
+    <p class="lp-band-text">
+      使うほどKurageが広まり、広まるほど実需が生まれ、生まれた価値が
+      <b>育ててくれたあなた</b>へ還ってくる。URLAIは、その循環の<b>当事者になるための仕組み</b>です。
     </p>
-    <a class="btn btn-x" href="?login=1">𝕏 でログインして始める</a>
-  </div>
+  </section>
+
+  <section class="lp-eco">
+    <h3 class="lp-eco-title">あなたが広げる、Kurageの“実体”</h3>
+    <p class="lp-eco-lead">
+      Kurageは1つのボットではなく、<b>本番稼働しているAIプロダクト群</b>。あなたの拡散は、この全部の知名度になります。
+    </p>
+    <div class="lp-eco-grid">
+      <span class="lp-eco-item"><b>kfreqai</b>暗号資産の判断AI</span>
+      <span class="lp-eco-item"><b>kfxai</b>FXの判断AI</span>
+      <span class="lp-eco-item"><b>kcbrain</b>暗号ジャッジAPI</span>
+      <span class="lp-eco-item"><b>kfxbrain</b>FXジャッジAPI</span>
+      <span class="lp-eco-item"><b>kvtuber</b>AI VTuber</span>
+      <span class="lp-eco-item"><b>url2brain</b>配信エンジン(OSS)</span>
+    </div>
+  </section>
+
+  <section class="lp-band lp-philo">
+    <span class="lp-band-kicker">思想 — inspired by Bittensor</span>
+    <h3 class="lp-band-title">あなたは“利用者”ではなく、<em>共に育てる人</em>。</h3>
+    <p class="lp-band-text">
+      私たちは <b>Bittensor</b> の考え方を支持しています。AIが生み出す価値を運営が独り占めするのではなく、
+      使い・広め・支えてくれた人へ <b>トークンで還元する</b>。それが URLAI です。
+      あなたの1回が、この分配ネットワークの一部になります。
+    </p>
+  </section>
+
+  <section class="lp-steps">
+    <h3 class="lp-steps-title">3ステップ、数分で完了</h3>
+    <ol class="lp-steps-list">
+      <li><span class="lp-step-n">1</span><b>Xでログイン</b><small>Baseウォレットを接続します。</small></li>
+      <li><span class="lp-step-n">2</span><b>URLを1つ入力</b><small>Kurageさんが読んで告知文とブログを執筆。</small></li>
+      <li><span class="lp-step-n">3</span><b>5媒体へ自動配信</b><small>完了したあなたへ URLAI を配布。</small></li>
+    </ol>
+  </section>
+
+  <section class="lp-band lp-econ">
+    <span class="lp-band-kicker">テスト完了後の姿</span>
+    <h3 class="lp-band-title">1回のご利用は <em>200円</em>、または <em>20,000 URLAI</em>。</h3>
+    <p class="lp-band-text">
+      テストが終わったら、1回のご利用を <b>200円でも、20,000 URLAIでも</b>お支払いいただける
+      <b>選択制</b>になります。テスト期間に受け取ったURLAIは、そのまま利用料としてお使いいただけます。
+      使わずに持ち続ける人は、<b>Kurageが育てば、その上振れを分かち合う</b>——約束ではなく、
+      早く支えてくれた人への“取り分”として。
+    </p>
+    <div class="lp-flow">
+      <span>URLAIを受け取る</span><i>→</i><span>使って支払う／売る</span><i>→</i><span>欲しい人が買う</span><i>→</i><span>経済が回る</span>
+    </div>
+    <p class="lp-band-text lp-band-text--em">
+      いまはその仕組みを検証する<b>テスト期間</b>。<b>あなたの協力が、この経済の最初の一歩</b>になります。
+    </p>
+    <a class="btn btn-x lp-cta" href="?login=1">𝕏 でログインして始める</a>
+  </section>
 
 <?php elseif ($view === 'form'): ?>
   <div class="intro">

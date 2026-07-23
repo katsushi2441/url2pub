@@ -205,4 +205,122 @@ footer.site a { font-weight: 700; }
   .card { padding: 20px; }
   .reward-banner { grid-template-columns: 1fr; gap: 8px; }
   .wallet-row { align-items: flex-start; flex-direction: column; }
+  .lp-steps-list { grid-template-columns: 1fr; }
+  .lp-band { padding: 26px 20px; }
+  .lp-token { padding: 20px 22px; }
+}
+
+/* ===== ランディング(login view) ===== */
+/* URLAI = 価値/トークンのゴールド。ライト/ダーク両対応で定義。 */
+:root { --gold:#c98a1e; --gold-soft:#9a6b00; --gold-bg:#fbf2db; --gold-line:#ecd9a8; }
+@media (prefers-color-scheme: dark) {
+  :root { --gold:#f2c766; --gold-soft:#e8bd58; --gold-bg:#241b08; --gold-line:#4c3c17; }
+}
+:root[data-theme="dark"]  { --gold:#f2c766; --gold-soft:#e8bd58; --gold-bg:#241b08; --gold-line:#4c3c17; }
+:root[data-theme="light"] { --gold:#c98a1e; --gold-soft:#9a6b00; --gold-bg:#fbf2db; --gold-line:#ecd9a8; }
+
+.lp-hero { text-align: center; padding: 14px 0 6px; }
+.lp-eyebrow {
+  display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .1em;
+  color: var(--gold-soft); background: var(--gold-bg); border: 1px solid var(--gold-line);
+  padding: 6px 15px; border-radius: 999px;
+}
+.lp-title {
+  font-family: "Zen Maru Gothic", sans-serif; font-weight: 900;
+  font-size: clamp(30px, 6vw, 52px); line-height: 1.22; letter-spacing: -.02em;
+  margin: 18px auto 0; max-width: 15em; color: var(--abyss); text-wrap: balance;
+}
+.lp-title em { font-style: normal; color: var(--teal-deep); }
+.lp-lead {
+  font-size: clamp(15px, 2.3vw, 18px); line-height: 1.95; color: var(--abyss-soft);
+  max-width: 34em; margin: 18px auto 0;
+}
+.lp-lead b { color: var(--abyss); font-weight: 700; }
+
+.lp-token {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 3px;
+  margin: 28px auto 0; padding: 22px 36px; background: var(--gold-bg);
+  border: 1px solid var(--gold-line); border-radius: 22px; box-shadow: var(--shadow);
+}
+.lp-token-kicker { font-size: 12.5px; font-weight: 700; letter-spacing: .06em; color: var(--gold-soft); }
+.lp-token-amt {
+  font-family: "Zen Maru Gothic", sans-serif; font-weight: 900; color: var(--gold);
+  font-size: clamp(46px, 11vw, 84px); line-height: 1; display: inline-flex; align-items: baseline; gap: .2em;
+}
+.lp-token-unit { font-size: .32em; letter-spacing: .05em; color: var(--gold-soft); }
+.lp-token-sub { font-size: 13px; color: var(--abyss-soft); margin-top: 8px; max-width: 26em; line-height: 1.7; }
+.lp-token-sub b { color: var(--gold-soft); }
+.lp-token--soon .lp-token-amt { font-size: clamp(28px, 6vw, 44px); }
+
+.lp-cta { margin-top: 26px; font-size: 16px; padding: 15px 32px; }
+.lp-cta-note { font-size: 12.5px; color: var(--abyss-soft); margin-top: 11px; }
+.lp-media { justify-content: center; margin-top: 26px; }
+
+.lp-band {
+  margin-top: 30px; padding: 36px 32px; border-radius: 24px;
+  background: var(--panel); border: 1px solid var(--panel-line); text-align: center;
+}
+.lp-band-kicker { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .1em; color: var(--teal-deep); }
+.lp-band-title {
+  font-family: "Zen Maru Gothic", sans-serif; font-weight: 900;
+  font-size: clamp(23px, 4.6vw, 38px); line-height: 1.3; margin: 12px auto 0;
+  max-width: 18em; color: var(--abyss); text-wrap: balance;
+}
+.lp-band-title em { font-style: normal; color: var(--gold); }
+.lp-band-text { font-size: clamp(14px, 2vw, 16px); line-height: 2; color: var(--abyss-soft); max-width: 36em; margin: 16px auto 0; }
+.lp-band-text b { color: var(--abyss); font-weight: 700; }
+.lp-band-text--em { color: var(--abyss); }
+.lp-econ { background: var(--gold-bg); border-color: var(--gold-line); }
+.lp-econ .lp-band-kicker { color: var(--gold-soft); }
+
+.lp-steps { margin-top: 30px; text-align: center; }
+.lp-steps-title { font-family: "Zen Maru Gothic", sans-serif; font-weight: 700; font-size: clamp(20px, 3.4vw, 26px); color: var(--abyss); }
+.lp-steps-list { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 22px 0 0; padding: 0; }
+.lp-steps-list li { background: var(--foam); border: 1px solid var(--panel-line); border-radius: 18px; padding: 26px 18px; box-shadow: var(--shadow); }
+.lp-step-n {
+  display: inline-flex; align-items: center; justify-content: center; width: 46px; height: 46px;
+  border-radius: 50%; background: var(--teal); color: #fff; font-family: "Zen Maru Gothic", sans-serif;
+  font-weight: 900; font-size: 22px; margin-bottom: 14px;
+}
+.lp-steps-list b { display: block; font-size: 16px; color: var(--abyss); }
+.lp-steps-list small { display: block; font-size: 13px; color: var(--abyss-soft); margin-top: 7px; line-height: 1.7; }
+
+.lp-flow { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 9px; margin: 22px auto 6px; }
+.lp-flow span { background: var(--foam); border: 1px solid var(--gold-line); border-radius: 999px; padding: 8px 16px; font-size: 13.5px; font-weight: 700; color: var(--abyss); }
+.lp-flow i { color: var(--gold); font-style: normal; font-weight: 900; font-size: 15px; }
+
+/* フライホイール */
+.fw { display: flex; flex-wrap: wrap; align-items: stretch; justify-content: center; gap: 10px; margin: 24px auto 4px; }
+.fw-node {
+  background: var(--foam); border: 1px solid var(--panel-line); border-radius: 16px;
+  padding: 16px 14px; min-width: 140px; max-width: 190px; text-align: center; box-shadow: var(--shadow);
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.fw-node--gold { background: var(--gold-bg); border-color: var(--gold-line); }
+.fw-n {
+  display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px;
+  border-radius: 50%; background: var(--teal); color: #fff; font-weight: 900; font-size: 14px; margin-bottom: 6px;
+}
+.fw-node--gold .fw-n { background: var(--gold); }
+.fw-node b { font-size: 14px; color: var(--abyss); line-height: 1.4; }
+.fw-node small { font-size: 11.5px; color: var(--abyss-soft); line-height: 1.5; }
+.fw-arrow { align-self: center; color: var(--teal); font-style: normal; font-weight: 900; font-size: 20px; }
+.fw-arrow--loop { color: var(--gold); font-size: 24px; }
+
+/* エコシステム */
+.lp-eco { margin-top: 30px; text-align: center; }
+.lp-eco-title { font-family: "Zen Maru Gothic", sans-serif; font-weight: 800; font-size: clamp(20px, 3.4vw, 26px); color: var(--abyss); }
+.lp-eco-lead { font-size: clamp(13.5px, 2vw, 15px); color: var(--abyss-soft); max-width: 32em; margin: 12px auto 0; line-height: 1.9; }
+.lp-eco-lead b { color: var(--abyss); }
+.lp-eco-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 22px; }
+.lp-eco-item {
+  background: var(--foam); border: 1px solid var(--panel-line); border-radius: 14px; padding: 16px 14px;
+  font-size: 12.5px; color: var(--abyss-soft); display: flex; flex-direction: column; gap: 4px; box-shadow: var(--shadow);
+}
+.lp-eco-item b { font-size: 15px; color: var(--teal-deep); font-weight: 800; }
+
+@media (max-width: 620px) {
+  .lp-eco-grid { grid-template-columns: 1fr 1fr; }
+  .fw-arrow { display: none; }
+  .fw-node { min-width: 44%; }
 }
