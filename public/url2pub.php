@@ -88,6 +88,7 @@ $T_ALL = array(
   'intro' => 'URLを1つ渡すだけで、<b>Kurageさん</b>がその記事を解析して考察し、告知文とブログ記事を書き上げ、<b>株式会社エクスブリッジ</b>が運営する5つのメディアへ自動で配信します。',
   'reward_banner_desc' => '先着1,000人・XアカウントとBaseウォレットにつき1回。5媒体への配信は、媒体側で失敗しても特典対象です。',
   'wallet_optional_note' => 'ウォレット接続は任意です（キャンペーン中につき配信は無料）。10,000 URLAIの特典を受け取りたい場合のみ接続してください。既に特典を受け取り済みの方は接続不要です。',
+  'job_close_note' => '配信はサーバー側で実行されます。このままブラウザを閉じても配信は完了し、結果は「履歴」から確認できます。',
   'form_label' => '配信したいページのURL',
   'form_submit' => 'Kurageさんに配信してもらう',
   'progress_working' => 'Kurageさんが作業中です',
@@ -190,6 +191,7 @@ $T_ALL = array(
   'intro' => 'Just hand over one URL and <b>Kurage</b> analyzes the article, writes an announcement and a blog post, and auto-publishes to 5 media run by <b>EXBRIDGE, Inc.</b>',
   'reward_banner_desc' => 'First 1,000 people, once per X account and Base wallet. You qualify even if some of the 5 media fail on their side.',
   'wallet_optional_note' => 'Connecting a wallet is optional (publishing is free during the campaign). Connect only if you want the 10,000 URLAI reward. Already claimed? No need to connect.',
+  'job_close_note' => 'Publishing runs on the server. You can close this browser — the run will complete and results are available in History.',
   'form_label' => 'URL of the page to publish',
   'form_submit' => 'Have Kurage publish it',
   'progress_working' => 'Kurage is working',
@@ -733,6 +735,58 @@ if (u2pForm) {
     });
   }
 
+  function u2pCallAjax(action, platform, body) {
+    var qs = 'ajax.php?action=' + action + (platform ? '&platform=' + platform : '');
+    return fetch(qs, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) { return r.json(); });
+  }
+
+  function u2pShowProgress() {
+    u2pForm.style.display = 'none';
+    var progressEl = document.getElementById('u2pProgress');
+    progressEl.style.display = 'block';
+    document.getElementById('u2pSteps').innerHTML = STEPS.map(function (s) {
+      return '<li id="step-' + s.key + '" data-label="' + s.label + '">⏳ ' + s.label + '</li>';
+    }).join('');
+    var noteId = 'u2pCloseNote';
+    if (!document.getElementById(noteId)) {
+      var note = document.createElement('p');
+      note.id = noteId;
+      note.style.cssText = 'margin:10px 0 0;font-size:12px;opacity:.8';
+      note.textContent = <?php echo json_encode($T['job_close_note'], JSON_UNESCAPED_UNICODE); ?>;
+      progressEl.appendChild(note);
+    }
+  }
+
+  function u2pFail(msg) {
+    document.getElementById('u2pProgress').style.display = 'none';
+    u2pForm.style.display = 'block';
+    var errEl = document.getElementById('u2pError');
+    errEl.textContent = msg;
+    errEl.style.display = 'block';
+  }
+
+  function u2pPollJob(jobId) {
+    localStorage.setItem('u2p_job', jobId);
+    var timer = setInterval(function () {
+      u2pCallAjax('job-status', null, { job_id: jobId }).then(function (d) {
+        if (!d.ok) { clearInterval(timer); localStorage.removeItem('u2p_job'); u2pFail(d.error || T.err_save); return; }
+        Object.keys(d.steps || {}).forEach(function (k) {
+          if (d.steps[k] === 'ok') { u2pMark(k, 'ok'); }
+          else if (d.steps[k] === 'ng') { u2pMark(k, 'ng', (d.errors && d.errors[k]) || T.err_failed); }
+        });
+        if (d.status === 'done') {
+          clearInterval(timer); localStorage.removeItem('u2p_job');
+          u2pMark('reward', d.reward && d.reward.status !== 'closed' ? 'ok' : 'ng', d.reward ? (d.reward.message || '') : '');
+          window.location.href = 'url2pub.php?step=share' + (d.history_id ? '&id=' + encodeURIComponent(d.history_id) : '');
+        } else if (d.status === 'failed') {
+          clearInterval(timer); localStorage.removeItem('u2p_job');
+          var keys = d.errors ? Object.keys(d.errors) : [];
+          u2pFail(keys.length ? d.errors[keys[0]] : T.err_failed);
+        }
+      }).catch(function () { /* 一時的な通信エラーは次のポーリングで回復する */ });
+    }, 3000);
+  }
+
   u2pForm.addEventListener('submit', async function (e) {
     e.preventDefault();
     var url = document.getElementById('url').value;
@@ -744,67 +798,26 @@ if (u2pForm) {
       try { wallet = await connectWallet(); }
       catch (walletError) { wallet = ''; }
     }
-    u2pForm.style.display = 'none';
-    var progressEl = document.getElementById('u2pProgress');
-    progressEl.style.display = 'block';
-    var stepsEl = document.getElementById('u2pSteps');
-    stepsEl.innerHTML = STEPS.map(function (s) {
-      return '<li id="step-' + s.key + '" data-label="' + s.label + '">⏳ ' + s.label + '</li>';
-    }).join('');
-
-    function callAjax(action, platform, body) {
-      var qs = 'ajax.php?action=' + action + (platform ? '&platform=' + platform : '');
-      return fetch(qs, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) { return r.json(); });
-    }
-
-    function fail(msg) {
-      progressEl.style.display = 'none';
-      u2pForm.style.display = 'block';
-      errEl.textContent = msg;
-      errEl.style.display = 'block';
-    }
-
-    var runId = '';
-    callAjax('analyze', null, { url: url, wallet: wallet }).then(function (d) {
+    u2pShowProgress();
+    // サーバー側ジョブ(2026-07-29): startで即job_idが返り、配信はサーバーで完走する。
+    u2pCallAjax('start', null, { url: url, wallet: wallet }).then(function (d) {
       if (!d.ok) { throw new Error(d.error || T.err_analyze); }
-      u2pMark('analyze', 'ok');
-      runId = d.run_id;
-      var source = d.source;
-      return callAjax('announcement', null, { run_id: runId, source: source }).then(function (d2) {
-        if (!d2.ok) { throw new Error(d2.error || T.err_announcement); }
-        u2pMark('announcement', 'ok');
-        var announcement = d2.announcement;
-        return callAjax('blog', null, { run_id: runId, source: source }).then(function (d3) {
-          if (!d3.ok) { throw new Error(d3.error || T.err_blog); }
-          u2pMark('blog', 'ok');
-          var blog = d3.blog;
-          var posted = [];
-          var chain = Promise.resolve();
-          PLATFORMS.forEach(function (p) {
-            chain = chain.then(function () {
-              return callAjax('post', p.key, { run_id: runId, source: source, announcement: announcement, blog: blog }).then(function (dp) {
-                u2pMark('post-' + p.key, dp.ok ? 'ok' : 'ng', dp.ok ? '' : (dp.error || T.err_failed));
-                posted.push({ key: p.key, label: p.label, ok: !!dp.ok, url: dp.url || '', error: dp.error || '' });
-              }).catch(function (postError) {
-                var message = postError.message || String(postError);
-                u2pMark('post-' + p.key, 'ng', message);
-                posted.push({ key: p.key, label: p.label, ok: false, url: '', error: message });
-              });
-            });
-          });
-          return chain.then(function () {
-            return callAjax('finish', null, { run_id: runId, source: source, announcement: announcement, blog: blog, posted: posted });
-          });
-        });
-      });
-    }).then(function (dfin) {
-      if (!dfin || !dfin.ok) { throw new Error(T.err_save); }
-      u2pMark('reward', dfin.reward && dfin.reward.status !== 'closed' ? 'ok' : 'ng', dfin.reward ? (dfin.reward.message || '') : '');
-      window.location.href = 'url2pub.php?step=share';
+      u2pPollJob(d.job_id);
     }).catch(function (err) {
-      fail(err.message || String(err));
+      u2pFail(err.message || String(err));
     });
   });
+
+  // ページ再訪時: 実行中ジョブがあれば進捗表示を自動復帰(ブラウザを閉じても配信は継続している)
+  (function () {
+    var resumeId = localStorage.getItem('u2p_job');
+    if (!resumeId) { return; }
+    u2pCallAjax('job-status', null, { job_id: resumeId }).then(function (d) {
+      if (!d.ok || d.status !== 'running') { localStorage.removeItem('u2p_job'); return; }
+      u2pShowProgress();
+      u2pPollJob(resumeId);
+    }).catch(function () {});
+  })();
 }
 
 document.querySelectorAll('.reward-status[data-claim-id]').forEach(function (el) {

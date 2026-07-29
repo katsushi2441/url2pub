@@ -317,3 +317,167 @@ function u2p_reward_enqueue($claim) {
     u2p_reward_update($claim['id'], array('status' => 'queued', 'job_id' => $job_id), array('pending', 'enqueue_failed', 'failed'));
     return array('ok' => true, 'job_id' => $job_id);
 }
+
+// ---------------------------------------------------------------------------
+// サーバー側ジョブ実行(2026-07-29): ブラウザを閉じても配信が完走する「kurage方式」。
+// startでジョブを作成→同一リクエスト内で全ステップを実行(ignore_user_abort)。
+// ブラウザはjob-statusをポーリングして進捗表示するだけ。ランナーが死んだ場合は
+// job-statusのtick(90秒無更新で1ステップ前進)が救済する。
+// ---------------------------------------------------------------------------
+define('U2P_JOBS_DIR', __DIR__ . '/storage/jobs');
+
+function u2p_job_path($id) {
+    return U2P_JOBS_DIR . '/' . preg_replace('/[^a-f0-9]/', '', $id) . '.json';
+}
+
+function u2p_job_load($id) {
+    $p = u2p_job_path($id);
+    if (!is_file($p)) { return null; }
+    $j = json_decode((string)@file_get_contents($p), true);
+    return is_array($j) ? $j : null;
+}
+
+function u2p_job_save($job) {
+    if (!is_dir(U2P_JOBS_DIR)) { @mkdir(U2P_JOBS_DIR, 0705, true); }
+    $job['updated_at'] = time();
+    file_put_contents(u2p_job_path($job['id']), json_encode($job, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
+    return $job;
+}
+
+function u2p_job_new($username, $url, $wallet, $lang) {
+    $steps = array('analyze', 'announcement', 'blog',
+                   'post-bluesky', 'post-hatena-bookmark', 'post-aixsns', 'post-bludit', 'post-hatena-blog',
+                   'reward');
+    $state = array();
+    foreach ($steps as $s) { $state[$s] = 'pending'; }
+    $job = array(
+        'id' => bin2hex(random_bytes(16)),
+        'username' => (string)$username,
+        'url' => (string)$url,
+        'wallet' => (string)$wallet,
+        'lang' => (string)$lang,
+        'status' => 'running',
+        'steps' => $state,
+        'errors' => array(),
+        'posted' => array(),
+        'source' => null, 'announcement' => null, 'blog' => null,
+        'history_id' => '', 'reward' => null,
+        'created_at' => time(), 'updated_at' => time(),
+    );
+    return u2p_job_save($job);
+}
+
+/** 次のpendingステップを1つ実行して保存。全完了でstatus=done。 */
+function u2p_job_advance($job) {
+    $labels = array('bluesky' => 'Bluesky', 'hatena-bookmark' => 'はてなブックマーク',
+                    'aixsns' => 'AIxSNS', 'bludit' => 'Kurageブログ', 'hatena-blog' => 'はてなブログ');
+    foreach ($job['steps'] as $step => $st) {
+        if ($st !== 'pending') { continue; }
+        $job['steps'][$step] = 'running';
+        u2p_job_save($job);
+        try {
+            if ($step === 'analyze') {
+                $r = u2p_api('/analyze/url', array('url' => $job['url'], 'depth' => 'full'));
+                if ($r['status'] !== 200 || empty($r['data']['result'])) {
+                    throw new Exception(isset($r['data']['detail']) ? $r['data']['detail'] : '解析に失敗しました');
+                }
+                $job['source'] = $r['data']['result'];
+            } elseif ($step === 'announcement') {
+                $r = u2p_api('/generate/announcement', array('source' => $job['source'], 'language' => $job['lang'], 'tone' => 'neutral'));
+                if ($r['status'] !== 200 || empty($r['data']['result'])) {
+                    throw new Exception(isset($r['data']['detail']) ? $r['data']['detail'] : '告知文の生成に失敗しました');
+                }
+                $job['announcement'] = $r['data']['result'];
+            } elseif ($step === 'blog') {
+                $r = u2p_api('/generate/blog-article', array('source' => $job['source'], 'language' => $job['lang'], 'tone' => 'neutral'));
+                if ($r['status'] !== 200 || empty($r['data']['result'])) {
+                    throw new Exception(isset($r['data']['detail']) ? $r['data']['detail'] : 'ブログ記事の生成に失敗しました');
+                }
+                $job['blog'] = $r['data']['result'];
+            } elseif (strpos($step, 'post-') === 0) {
+                $platform = substr($step, 5);
+                $text = isset($job['announcement']['text']) ? $job['announcement']['text'] : '';
+                $title = isset($job['blog']['title']) ? $job['blog']['title'] : '';
+                $body = isset($job['blog']['body_markdown']) ? $job['blog']['body_markdown'] : '';
+                if ($platform === 'bluesky') {
+                    $result = u2p_post_bluesky(u2p_persona_frame($text, 'kurage', 'announcement', $job['lang']));
+                } elseif ($platform === 'hatena-bookmark') {
+                    $result = u2p_post_hatena_bookmark($job['url'], $text);
+                } elseif ($platform === 'aixsns') {
+                    $result = u2p_post_aixsns(u2p_persona_frame($text, 'bittensorman', 'announcement', $job['lang']));
+                } elseif ($platform === 'bludit') {
+                    $result = u2p_post_bludit($title, u2p_persona_frame($body, 'kurage', 'blog', $job['lang']));
+                } else {
+                    $result = u2p_post_hatena_blog($title, u2p_persona_frame($body, 'bittensorman', 'blog', $job['lang']));
+                }
+                // 媒体障害は利用者の責任ではない(従来方針): 失敗もngとして記録して先へ進む
+                $job['posted'][] = array('key' => $platform,
+                    'label' => isset($labels[$platform]) ? $labels[$platform] : $platform,
+                    'ok' => !empty($result['ok']), 'url' => isset($result['url']) ? $result['url'] : '',
+                    'error' => isset($result['error']) ? $result['error'] : '');
+                $job['steps'][$step] = !empty($result['ok']) ? 'ok' : 'ng';
+                if (empty($result['ok'])) { $job['errors'][$step] = isset($result['error']) ? $result['error'] : '失敗'; }
+                return u2p_job_save($job);
+            } elseif ($step === 'reward') {
+                $history_id = u2p_history_new_id();
+                $reward_result = array('ok' => true, 'eligible' => false, 'status' => 'disabled', 'message' => '利用特典は現在停止中です');
+                if (u2p_reward_enabled()) {
+                    if ($job['wallet'] === '') {
+                        $reward_result = array('ok' => true, 'eligible' => false, 'status' => 'no_wallet',
+                            'message' => 'ウォレット未接続のため特典申請はありません（配信は完了しています）');
+                    } else {
+                        $reward_result = u2p_reward_reserve($job['username'], $job['wallet'], $history_id);
+                    }
+                }
+                $record = array(
+                    'id' => $history_id, 'created_at' => date('c'),
+                    'source' => $job['source'], 'announcement' => $job['announcement'], 'blog' => $job['blog'],
+                    'posted' => $job['posted'],
+                    'reward_claim_id' => !empty($reward_result['claim']['id']) ? $reward_result['claim']['id'] : '',
+                    'reward_status' => isset($reward_result['status']) ? $reward_result['status'] : '',
+                );
+                u2p_history_save($job['username'], $record);
+                if (!empty($reward_result['eligible']) && !empty($reward_result['claim'])) {
+                    $queued = u2p_reward_enqueue($reward_result['claim']);
+                    if (empty($queued['ok'])) {
+                        u2p_reward_update($reward_result['claim']['id'], array('status' => 'enqueue_failed', 'message' => $queued['error']), array('pending'));
+                    }
+                    $reward_result['claim'] = u2p_reward_find($reward_result['claim']['id']);
+                }
+                $job['history_id'] = $history_id;
+                $job['reward'] = !empty($reward_result['claim']) ? u2p_reward_public($reward_result['claim']) : array(
+                    'status' => isset($reward_result['status']) ? $reward_result['status'] : 'unavailable',
+                    'message' => isset($reward_result['message']) ? $reward_result['message'] : '');
+                $job['steps'][$step] = 'ok';
+                $job['status'] = 'done';
+                return u2p_job_save($job);
+            }
+            $job['steps'][$step] = 'ok';
+            return u2p_job_save($job);
+        } catch (Exception $e) {
+            // 生成系ステップの失敗はジョブ全体を失敗として止める(従来のfailと同じ挙動)
+            $job['steps'][$step] = 'ng';
+            $job['errors'][$step] = $e->getMessage();
+            $job['status'] = 'failed';
+            return u2p_job_save($job);
+        }
+    }
+    if ($job['status'] === 'running') { $job['status'] = 'done'; }
+    return u2p_job_save($job);
+}
+
+/** ジョブを最後まで実行(startのランナー用)。 */
+function u2p_job_run_all($id) {
+    for ($i = 0; $i < 20; $i++) {
+        $job = u2p_job_load($id);
+        if ($job === null || $job['status'] !== 'running') { return; }
+        u2p_job_advance($job);
+    }
+}
+
+/** UI向けの公開状態。 */
+function u2p_job_public($job) {
+    return array('ok' => true, 'job_id' => $job['id'], 'status' => $job['status'],
+        'steps' => $job['steps'], 'errors' => $job['errors'],
+        'history_id' => $job['history_id'], 'reward' => $job['reward']);
+}

@@ -43,6 +43,44 @@ function ajax_verify_hash($run, $key, $value) {
     }
 }
 
+if ($action === 'start') {
+    // サーバー側ジョブ方式(2026-07-29): ブラウザを閉じても配信が完走する。
+    $url = isset($input['url']) ? trim((string)$input['url']) : '';
+    $wallet = u2p_reward_wallet(isset($input['wallet']) ? $input['wallet'] : '');
+    if ($url === '' || !filter_var($url, FILTER_VALIDATE_URL)) { ajax_fail(am('有効なURLを入力してください。', 'Please enter a valid URL.')); }
+    $job = u2p_job_new($auth['session_user'], $url, $wallet, $u2p_lang);
+    // セッションロックを先に手放す(長時間ランナーがjob-statusポーリングを塞がないように)
+    session_write_close();
+    // ブラウザへ即時応答してから、切断されてもこのリクエスト内でジョブを完走させる
+    ignore_user_abort(true);
+    @set_time_limit(0);
+    $payload = json_encode(array('ok' => true, 'job_id' => $job['id']), JSON_UNESCAPED_UNICODE);
+    while (ob_get_level() > 0) { ob_end_clean(); }
+    header('Content-Type: application/json; charset=utf-8');
+    header('Content-Length: ' . strlen($payload));
+    header('Connection: close');
+    echo $payload;
+    flush();
+    if (function_exists('fastcgi_finish_request')) { @fastcgi_finish_request(); }
+    u2p_job_run_all($job['id']);
+    exit;
+}
+
+if ($action === 'job-status') {
+    $job_id = isset($input['job_id']) ? (string)$input['job_id'] : '';
+    $job = u2p_job_load($job_id);
+    if ($job === null || $job['username'] !== $auth['session_user']) { ajax_fail('job not found'); }
+    session_write_close();
+    // ランナー死亡時の救済tick: 90秒更新が無ければポーリング側で1ステップ前進させる
+    if ($job['status'] === 'running' && (time() - (int)$job['updated_at']) > 90) {
+        ignore_user_abort(true);
+        @set_time_limit(0);
+        $job = u2p_job_advance($job);
+    }
+    echo json_encode(u2p_job_public($job), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    exit;
+}
+
 if ($action === 'analyze') {
     $url = isset($input['url']) ? trim((string)$input['url']) : '';
     $wallet = u2p_reward_wallet(isset($input['wallet']) ? $input['wallet'] : '');
