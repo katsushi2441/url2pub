@@ -47,7 +47,6 @@ if ($action === 'analyze') {
     $url = isset($input['url']) ? trim((string)$input['url']) : '';
     $wallet = u2p_reward_wallet(isset($input['wallet']) ? $input['wallet'] : '');
     if ($url === '' || !filter_var($url, FILTER_VALIDATE_URL)) { ajax_fail(am('有効なURLを入力してください。', 'Please enter a valid URL.')); }
-    if (u2p_reward_enabled() && $wallet === '') { ajax_fail(am('Baseウォレットを接続してください。', 'Please connect a Base wallet.')); }
     $r = u2p_api('/analyze/url', array('url' => $url, 'depth' => 'full'));
     if ($r['status'] !== 200 || empty($r['data']['result'])) {
         ajax_fail(isset($r['data']['detail']) ? $r['data']['detail'] : am('解析に失敗しました', 'Analysis failed'));
@@ -160,7 +159,14 @@ if ($action === 'finish') {
     $history_id = u2p_history_new_id();
     $reward_result = array('ok' => true, 'eligible' => false, 'status' => 'disabled', 'message' => '利用特典は現在停止中です');
     if (u2p_reward_enabled()) {
-        $reward_result = u2p_reward_reserve($auth['session_user'], $run['wallet'], $history_id);
+        if ($run['wallet'] === '') {
+            // ウォレットは任意(2026-07-29): 未接続でも配信は完了扱い。特典申請だけ無し。
+            $reward_result = array('ok' => true, 'eligible' => false, 'status' => 'no_wallet',
+                'message' => am('ウォレット未接続のため特典申請はありません（配信は完了しています）',
+                                'No wallet connected — publishing completed, no reward claim.'));
+        } else {
+            $reward_result = u2p_reward_reserve($auth['session_user'], $run['wallet'], $history_id);
+        }
     }
     $record = array(
         'id' => $history_id,

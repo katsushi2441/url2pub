@@ -87,6 +87,7 @@ $T_ALL = array(
   'reach_yt' => '<b>YouTube・考察ショート動画:</b> 質の高いコンテンツは、<a href="https://kurage.exbridge.jp/kmontage.php" target="_blank" rel="noopener">kmontage.php</a> で考察系のショート動画を生成し、<a href="https://kurage.exbridge.jp/kuragev.php" target="_blank" rel="noopener">kuragev.php</a> や YouTubeチャンネル <a href="https://www.youtube.com/@xb-bittensor" target="_blank" rel="noopener">@xb-bittensor</a> で配信することもあります。',
   'intro' => 'URLを1つ渡すだけで、<b>Kurageさん</b>がその記事を解析して考察し、告知文とブログ記事を書き上げ、<b>株式会社エクスブリッジ</b>が運営する5つのメディアへ自動で配信します。',
   'reward_banner_desc' => '先着1,000人・XアカウントとBaseウォレットにつき1回。5媒体への配信は、媒体側で失敗しても特典対象です。',
+  'wallet_optional_note' => 'ウォレット接続は任意です（キャンペーン中につき配信は無料）。10,000 URLAIの特典を受け取りたい場合のみ接続してください。既に特典を受け取り済みの方は接続不要です。',
   'form_label' => '配信したいページのURL',
   'form_submit' => 'Kurageさんに配信してもらう',
   'progress_working' => 'Kurageさんが作業中です',
@@ -188,6 +189,7 @@ $T_ALL = array(
   'reach_yt' => '<b>YouTube · analysis shorts:</b> For high-quality content, we may generate an analysis short video with <a href="https://kurage.exbridge.jp/kmontage.php" target="_blank" rel="noopener">kmontage.php</a> and distribute it on <a href="https://kurage.exbridge.jp/kuragev.php" target="_blank" rel="noopener">kuragev.php</a> and our YouTube channel <a href="https://www.youtube.com/@xb-bittensor" target="_blank" rel="noopener">@xb-bittensor</a>.',
   'intro' => 'Just hand over one URL and <b>Kurage</b> analyzes the article, writes an announcement and a blog post, and auto-publishes to 5 media run by <b>EXBRIDGE, Inc.</b>',
   'reward_banner_desc' => 'First 1,000 people, once per X account and Base wallet. You qualify even if some of the 5 media fail on their side.',
+  'wallet_optional_note' => 'Connecting a wallet is optional (publishing is free during the campaign). Connect only if you want the 10,000 URLAI reward. Already claimed? No need to connect.',
   'form_label' => 'URL of the page to publish',
   'form_submit' => 'Have Kurage publish it',
   'progress_working' => 'Kurage is working',
@@ -496,6 +498,7 @@ $reward_processing_label = $lang === 'en' ? 'Processing' : '送金処理中';
         <button type="button" id="u2pConnectWallet" class="btn btn-violet"><?php echo u2p_h($T['js']['wallet_connect']); ?></button>
         <span id="u2pWalletState"><?php echo u2p_h($T['js']['wallet_unconnected']); ?></span>
       </div>
+      <p style="margin:6px 0 0;font-size:12px;opacity:.8"><?php echo u2p_h($T['wallet_optional_note']); ?></p>
       <input type="hidden" id="u2pWallet" value="">
     <?php endif; ?>
     <label for="url"><?php echo u2p_h($T['form_label']); ?></label>
@@ -736,11 +739,10 @@ if (u2pForm) {
     var errEl = document.getElementById('u2pError');
     errEl.style.display = 'none';
     var wallet = walletInput ? walletInput.value : '';
-    if (walletInput && !wallet) {
+    // ウォレットは任意(2026-07-29): 特典を受け取りたい人だけ接続。未検出・拒否でも配信は進める。
+    if (walletInput && !wallet && window.ethereum) {
       try { wallet = await connectWallet(); }
-      catch (walletError) {
-        errEl.textContent = walletError.message || String(walletError); errEl.style.display = 'block'; return;
-      }
+      catch (walletError) { wallet = ''; }
     }
     u2pForm.style.display = 'none';
     var progressEl = document.getElementById('u2pProgress');
